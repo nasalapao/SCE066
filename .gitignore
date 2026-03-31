@@ -1,0 +1,25 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+*.pdb
+
+# Build output
+[Bb]in/
+[Oo]bj/
+Debug/
+Release/
+
+# NuGet
+packages/
+*.nupkg
+
+# Publish profiles / secrets
+*.pubxml
+*.publishsettings
+
+# Logs and temp
+*.log
+*.tmp
+*.bak

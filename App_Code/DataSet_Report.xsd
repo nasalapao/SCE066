@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="DataSet_Report" targetNamespace="http://tempuri.org/DataSet_Report.xsd" xmlns:mstns="http://tempuri.org/DataSet_Report.xsd" xmlns="http://tempuri.org/DataSet_Report.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections>
+          <Connection AppSettingsObjectName="Web.config" AppSettingsPropertyName="ConnectionString" ConnectionStringObject="" IsAppSettingsProperty="true" Modifier="Assembly" Name="ConnectionString (Web.config)" PropertyReference="AppConfig.System.Configuration.ConfigurationManager.0.ConnectionStrings.ConnectionString.ConnectionString" Provider="System.Data.OleDb" />
+        </Connections>
+        <Tables>
+          <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="DataTable1TableAdapter" GeneratorDataComponentClassName="DataTable1TableAdapter" Name="DataTable1" UserDataComponentName="DataTable1TableAdapter">
+            <MainSource>
+              <DbSource ConnectionRef="ConnectionString (Web.config)" DbObjectType="Unknown" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="false" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="false" UserGetMethodName="GetData" UserSourceName="Fill">
+                <SelectCommand>
+                  <DbCommand CommandType="Text" ModifiedByUser="true">
+                    <CommandText>select shusid,'' oaorst,shcuno,shivno,shetdd,shetad,'' okcunm,'' drtx40,dacdld,diff_dat1,diff_dat2,diff_dat3,diff_dat4,diff_dat5,0 diff_dat6,0 diff_dat7,'' shstatus,'' slremk,
+csytab_tepy.cttx15 as payterm,UATEDL As DeliTerm
+from    (
+   select shcono,shdivi,shusid,shivno,shcuno,shetdd,shetad,dacdld,shdat1,shdat2,shdat3,shdat4,shdat5,
+    0 as deadlinedate,
+    0  as date1,
+    0 AS DIFF_DAT1,
+   0 AS DIFF_DAT2,
+   0 AS DIFF_DAT3,
+   0 AS DIFF_DAT4,
+   0 AS DIFF_DAT5    from itprod.shdoch
+    left join mvxcdtprod.dconsi on dacono = shcono and daconn = shivno
+  )    data
+  left join (select distinct uacono,uadivi,uaconn,uatepy,uatedl from mvxcdtprod.odhead) odhead on uacono = shcono and uadivi = shdivi and uaconn = shivno
+  left join mvxcdtprod.csytab csytab_tepy on csytab_tepy.ctcono = shcono and csytab_tepy.ctstco = 'TEPY' and csytab_tepy.ctstky = uatepy
+  left join mvxcdtprod.csytab csytab_tedl on csytab_tedl.ctcono = shcono and csytab_tedl.ctstco = 'TEDL' and csytab_tedl.ctstky = uatedl
+     where shetdd &gt;= 20190901 and shetdd &lt;= 20190930
+     and shivno = '1903197'
+   and diff_dat1 &lt; 0 or diff_dat2 &lt; 0 or diff_dat3 &lt; 0 or diff_dat4 &lt; 0 or diff_dat5 &lt; 0  and  shusid LIKE '%'</CommandText>
+                    <Parameters />
+                  </DbCommand>
+                </SelectCommand>
+              </DbSource>
+            </MainSource>
+            <Mappings>
+              <Mapping SourceColumn="SHUSID" DataSetColumn="SHUSID" />
+              <Mapping SourceColumn="SHIVNO" DataSetColumn="SHIVNO" />
+              <Mapping SourceColumn="SHETDD" DataSetColumn="SHETDD" />
+              <Mapping SourceColumn="SHETAD" DataSetColumn="SHETAD" />
+              <Mapping SourceColumn="DACDLD" DataSetColumn="DACDLD" />
+              <Mapping SourceColumn="DIFF_DAT1" DataSetColumn="DIFF_DAT1" />
+              <Mapping SourceColumn="DIFF_DAT2" DataSetColumn="DIFF_DAT2" />
+              <Mapping SourceColumn="DIFF_DAT3" DataSetColumn="DIFF_DAT3" />
+              <Mapping SourceColumn="DIFF_DAT4" DataSetColumn="DIFF_DAT4" />
+              <Mapping SourceColumn="DIFF_DAT5" DataSetColumn="DIFF_DAT5" />
+              <Mapping SourceColumn="OAORST" DataSetColumn="OAORST" />
+              <Mapping SourceColumn="OKCUNM" DataSetColumn="OKCUNM" />
+              <Mapping SourceColumn="SHCUNO" DataSetColumn="SHCUNO" />
+              <Mapping SourceColumn="DRTX40" DataSetColumn="DRTX40" />
+              <Mapping SourceColumn="SHSTATUS" DataSetColumn="SHSTATUS" />
+              <Mapping SourceColumn="SLREMK" DataSetColumn="SLREMK" />
+              <Mapping SourceColumn="PAYTERM" DataSetColumn="PAYTERM" />
+              <Mapping SourceColumn="DELITERM" DataSetColumn="DELITERM" />
+              <Mapping SourceColumn="DIFF_DAT6" DataSetColumn="DIFF_DAT6" />
+              <Mapping SourceColumn="DIFF_DAT7" DataSetColumn="DIFF_DAT7" />
+            </Mappings>
+            <Sources />
+          </TableAdapter>
+        </Tables>
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="DataSet_Report" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_DataSetName="DataSet_Report" msprop:Generator_UserDSName="DataSet_Report">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="DataTable1" msprop:Generator_TableClassName="DataTable1DataTable" msprop:Generator_TableVarName="tableDataTable1" msprop:Generator_TablePropName="DataTable1" msprop:Generator_RowDeletingName="DataTable1RowDeleting" msprop:Generator_RowChangingName="DataTable1RowChanging" msprop:Generator_RowEvHandlerName="DataTable1RowChangeEventHandler" msprop:Generator_RowDeletedName="DataTable1RowDeleted" msprop:Generator_UserTableName="DataTable1" msprop:Generator_RowChangedName="DataTable1RowChanged" msprop:Generator_RowEvArgName="DataTable1RowChangeEvent" msprop:Generator_RowClassName="DataTable1Row">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="SHUSID" msprop:Generator_ColumnVarNameInTable="columnSHUSID" msprop:Generator_ColumnPropNameInRow="SHUSID" msprop:Generator_ColumnPropNameInTable="SHUSIDColumn" msprop:Generator_UserColumnName="SHUSID" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="SHIVNO" msprop:Generator_ColumnVarNameInTable="columnSHIVNO" msprop:Generator_ColumnPropNameInRow="SHIVNO" msprop:Generator_ColumnPropNameInTable="SHIVNOColumn" msprop:Generator_UserColumnName="SHIVNO" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="SHETDD" msprop:Generator_ColumnVarNameInTable="columnSHETDD" msprop:Generator_ColumnPropNameInRow="SHETDD" msprop:Generator_ColumnPropNameInTable="SHETDDColumn" msprop:Generator_UserColumnName="SHETDD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="SHETAD" msprop:Generator_ColumnVarNameInTable="columnSHETAD" msprop:Generator_ColumnPropNameInRow="SHETAD" msprop:Generator_ColumnPropNameInTable="SHETADColumn" msprop:Generator_UserColumnName="SHETAD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="DACDLD" msprop:Generator_ColumnVarNameInTable="columnDACDLD" msprop:Generator_ColumnPropNameInRow="DACDLD" msprop:Generator_ColumnPropNameInTable="DACDLDColumn" msprop:Generator_UserColumnName="DACDLD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="DIFF_DAT1" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT1" msprop:Generator_ColumnPropNameInRow="DIFF_DAT1" msprop:Generator_ColumnPropNameInTable="DIFF_DAT1Column" msprop:Generator_UserColumnName="DIFF_DAT1" type="xs:int" />
+              <xs:element name="DIFF_DAT2" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT2" msprop:Generator_ColumnPropNameInRow="DIFF_DAT2" msprop:Generator_ColumnPropNameInTable="DIFF_DAT2Column" msprop:Generator_UserColumnName="DIFF_DAT2" type="xs:int" />
+              <xs:element name="DIFF_DAT3" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT3" msprop:Generator_ColumnPropNameInRow="DIFF_DAT3" msprop:Generator_ColumnPropNameInTable="DIFF_DAT3Column" msprop:Generator_UserColumnName="DIFF_DAT3" type="xs:int" />
+              <xs:element name="DIFF_DAT4" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT4" msprop:Generator_ColumnPropNameInRow="DIFF_DAT4" msprop:Generator_ColumnPropNameInTable="DIFF_DAT4Column" msprop:Generator_UserColumnName="DIFF_DAT4" type="xs:int" />
+              <xs:element name="DIFF_DAT5" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT5" msprop:Generator_ColumnPropNameInRow="DIFF_DAT5" msprop:Generator_ColumnPropNameInTable="DIFF_DAT5Column" msprop:Generator_UserColumnName="DIFF_DAT5" type="xs:int" />
+              <xs:element name="OAORST" msprop:Generator_ColumnVarNameInTable="columnOAORST" msprop:Generator_ColumnPropNameInRow="OAORST" msprop:Generator_ColumnPropNameInTable="OAORSTColumn" msprop:Generator_UserColumnName="OAORST">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="1" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="OKCUNM" msprop:Generator_ColumnVarNameInTable="columnOKCUNM" msprop:Generator_ColumnPropNameInRow="OKCUNM" msprop:Generator_ColumnPropNameInTable="OKCUNMColumn" msprop:Generator_UserColumnName="OKCUNM">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="1" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="SHCUNO" msprop:Generator_ColumnVarNameInTable="columnSHCUNO" msprop:Generator_ColumnPropNameInRow="SHCUNO" msprop:Generator_ColumnPropNameInTable="SHCUNOColumn" msprop:Generator_UserColumnName="SHCUNO" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="10" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="DRTX40" msprop:Generator_ColumnVarNameInTable="columnDRTX40" msprop:Generator_ColumnPropNameInRow="DRTX40" msprop:Generator_ColumnPropNameInTable="DRTX40Column" msprop:Generator_UserColumnName="DRTX40">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="1" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="SHSTATUS" msprop:Generator_ColumnVarNameInTable="columnSHSTATUS" msprop:Generator_ColumnPropNameInRow="SHSTATUS" msprop:Generator_ColumnPropNameInTable="SHSTATUSColumn" msprop:Generator_UserColumnName="SHSTATUS">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="1" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="SLREMK" msprop:Generator_ColumnVarNameInTable="columnSLREMK" msprop:Generator_ColumnPropNameInRow="SLREMK" msprop:Generator_ColumnPropNameInTable="SLREMKColumn" msprop:Generator_UserColumnName="SLREMK">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="1" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="PAYTERM" msprop:Generator_ColumnVarNameInTable="columnPAYTERM" msprop:Generator_ColumnPropNameInRow="PAYTERM" msprop:Generator_ColumnPropNameInTable="PAYTERMColumn" msprop:Generator_UserColumnName="PAYTERM" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="30" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="DELITERM" msprop:Generator_ColumnVarNameInTable="columnDELITERM" msprop:Generator_ColumnPropNameInRow="DELITERM" msprop:Generator_ColumnPropNameInTable="DELITERMColumn" msprop:Generator_UserColumnName="DELITERM" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="6" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="DIFF_DAT6" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT6" msprop:Generator_ColumnPropNameInRow="DIFF_DAT6" msprop:Generator_ColumnPropNameInTable="DIFF_DAT6Column" msprop:Generator_UserColumnName="DIFF_DAT6" type="xs:int" />
+              <xs:element name="DIFF_DAT7" msprop:Generator_ColumnVarNameInTable="columnDIFF_DAT7" msprop:Generator_ColumnPropNameInRow="DIFF_DAT7" msprop:Generator_ColumnPropNameInTable="DIFF_DAT7Column" msprop:Generator_UserColumnName="DIFF_DAT7" type="xs:int" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
