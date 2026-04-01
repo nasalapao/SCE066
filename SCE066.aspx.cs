@@ -233,8 +233,9 @@ public partial class SCE066 : System.Web.UI.Page
             }
 
             sql_rel = "SELECT shivno,oaorst,trim(shcuno) || '-' || okcunm as cunm,shetdd,shetad,CASE WHEN shstsd = '1' THEN 'Complete' else 'Un-Complete' end as shstsd, " +
-                                 "shusid,shdat1,shdat2,shdat3,shdat4,shdat5,shdat6,shdat7,SHSTS1,SHSTS2,SHSTS3,SHSTS4,SHSTS5,shsts6 ,shsts7  " +
+                                 "shusid,coalesce(rtrim(char(invdoc.invdate)), '') as shdat8,shdat1,shdat2,shdat3,shdat4,shdat5,shdat6,shdat7,SHSTS1,SHSTS2,SHSTS3,SHSTS4,SHSTS5,shsts6 ,shsts7  " +
                                  " from itprod.shdoch " +
+                                 " left join (select slcono,sldivi,slivno,max(sldate) as invdate from itprod.shdocl where sldatu = '8' group by slcono,sldivi,slivno) invdoc on invdoc.slcono = shcono and invdoc.sldivi = shdivi and invdoc.slivno = shivno " +
                                  " left join " +
                                  "   (select uacono,uadivi,uaconn,max(uaorno) uaorno from mvxcdtprod.odhead group by uacono,uadivi,uaconn) odhead on uacono = shcono and uadivi = shdivi and uaconn = shivno " +
                 //" left join mvxcdtprod.oohead on oacono= uacono and oadivi = shdivi and oaorno = uaorno " +
@@ -273,8 +274,9 @@ public partial class SCE066 : System.Web.UI.Page
         {
 
             sql_rel = "SELECT shivno,oaorst,trim(shcuno) || '-' || okcunm as cunm,shetdd,shetad,CASE WHEN shstsd = '1' THEN 'Complete' else 'Un-Complete' end as shstsd, " +
-                             "shusid,shdat1,shdat2,shdat3,shdat4,shdat5,shdat6,shdat7,SHSTS1,SHSTS2,SHSTS3,SHSTS4,SHSTS5,shsts6,shsts7   " +
+                             "shusid,coalesce(rtrim(char(invdoc.invdate)), '') as shdat8,shdat1,shdat2,shdat3,shdat4,shdat5,shdat6,shdat7,SHSTS1,SHSTS2,SHSTS3,SHSTS4,SHSTS5,shsts6,shsts7   " +
                              " from itprod.shdoch " +
+                             " left join (select slcono,sldivi,slivno,max(sldate) as invdate from itprod.shdocl where sldatu = '8' group by slcono,sldivi,slivno) invdoc on invdoc.slcono = shcono and invdoc.sldivi = shdivi and invdoc.slivno = shivno " +
                              " left join " +
                              "   (select uacono,uadivi,uaconn,max(uaorno) uaorno from mvxcdtprod.odhead group by uacono,uadivi,uaconn) odhead on uacono = shcono and uadivi = shdivi and uaconn = shivno " +
                             // " left join mvxcdtprod.oohead on oacono= uacono and oadivi = shdivi and oaorno = uaorno " +
@@ -384,6 +386,8 @@ public partial class SCE066 : System.Web.UI.Page
             _datu = "6";
         if (e.CommandName.Equals("UPDAT7"))
             _datu = "7";
+        if (e.CommandName.Equals("UPDAT8"))
+            _datu = "8";
              
         if (e.CommandName.Equals("Appr"))
         {
@@ -458,7 +462,7 @@ public partial class SCE066 : System.Web.UI.Page
             // use for upload
             if ((e.CommandName.Equals("UPDAT1")) || (e.CommandName.Equals("UPDAT2")) || (e.CommandName.Equals("UPDAT3"))
                 || (e.CommandName.Equals("UPDAT4")) || (e.CommandName.Equals("UPDAT5")) || (e.CommandName.Equals("UPDAT6")) ||
-                (e.CommandName.Equals("UPDAT7"))
+                (e.CommandName.Equals("UPDAT7")) || (e.CommandName.Equals("UPDAT8"))
                 ) 
             {
 
@@ -495,7 +499,7 @@ public partial class SCE066 : System.Web.UI.Page
 
             if ((e.CommandName.Equals("UPDAT1")) || (e.CommandName.Equals("UPDAT2")) || (e.CommandName.Equals("UPDAT3"))
                 || (e.CommandName.Equals("UPDAT4")) || (e.CommandName.Equals("UPDAT5")) || (e.CommandName.Equals("UPDAT6")) ||
-                (e.CommandName.Equals("UPDAT7"))
+                (e.CommandName.Equals("UPDAT7")) || (e.CommandName.Equals("UPDAT8"))
                 )
             {
                 // view
@@ -564,9 +568,12 @@ public partial class SCE066 : System.Web.UI.Page
                                             }
                         //  end update status for view
 
-                        iDB2Command comm_upvw = new iDB2Command(sql_upvw, connection);
-                        //connection.Open();
-                        comm_upvw.ExecuteNonQuery();
+                        if (!sql_upvw.Equals(""))
+                        {
+                            iDB2Command comm_upvw = new iDB2Command(sql_upvw, connection);
+                            //connection.Open();
+                            comm_upvw.ExecuteNonQuery();
+                        }
                     }
 
 
@@ -719,36 +726,36 @@ public partial class SCE066 : System.Web.UI.Page
            
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS1")) != "1")
             {
-                e.Row.Cells[7].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[9].ForeColor = System.Drawing.Color.Red;
             }
 
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS2")) != "1")
             {
-                e.Row.Cells[9].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[11].ForeColor = System.Drawing.Color.Red;
             }
 
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS3")) != "1")
             {
-                e.Row.Cells[11].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[13].ForeColor = System.Drawing.Color.Red;
             }
 
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS4")) != "1")
             {
-                e.Row.Cells[13].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[15].ForeColor = System.Drawing.Color.Red;
             }
 
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS5")) != "1")
             {
-                e.Row.Cells[15].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[17].ForeColor = System.Drawing.Color.Red;
             }
 
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS6")) != "1")
             {
-                e.Row.Cells[17].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[19].ForeColor = System.Drawing.Color.Red;
             }
             if (Convert.ToString(DataBinder.Eval(e.Row.DataItem, "SHSTS7")) != "1")
             {
-                e.Row.Cells[19].ForeColor = System.Drawing.Color.Red;
+                e.Row.Cells[21].ForeColor = System.Drawing.Color.Red;
             }
             //ShowData();
 

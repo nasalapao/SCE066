@@ -181,6 +181,7 @@
                     <asp:ListItem Value="5">DHL Doc.</asp:ListItem>
                     <asp:ListItem Value="6">P/L</asp:ListItem>
                     <asp:ListItem Value="7">Custom</asp:ListItem>
+                    <asp:ListItem Value="8">Invoice</asp:ListItem>
                 </asp:DropDownList>
             </td>
             <td class="auto-style69"></td>
