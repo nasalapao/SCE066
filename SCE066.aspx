@@ -161,6 +161,20 @@
             padding: 20px;
         }
 
+        .error-banner {
+            margin-top: 16px;
+            padding: 12px 14px;
+            display: block;
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #f3c7c7;
+            background: #fff1f1;
+            color: #b42318;
+            font-size: 0.86rem;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
         .section-title {
             margin: 0;
             font-size: 1.1rem;
@@ -185,17 +199,18 @@
 
         .grid-wrap {
             border-radius: 10px;
-            overflow-x: visible;
+            overflow-x: auto;
         }
 
         .data-grid {
             width: 100%;
             margin-bottom: 0;
-            table-layout: fixed;
+            table-layout: auto;
             border-collapse: separate;
             border-spacing: 0;
             color: var(--text-main);
             font-size: 0.84rem;
+            min-width: 1760px;
         }
 
         .data-grid th {
@@ -219,10 +234,50 @@
             vertical-align: middle;
             border-bottom: 1px solid rgba(31, 41, 51, 0.05);
             border-right: 1px solid rgba(31, 41, 51, 0.05);
-            white-space: normal;
-            word-break: break-word;
+            white-space: nowrap;
+            word-break: normal;
             line-height: 1.35;
             background: rgba(255, 255, 255, 0.98);
+        }
+
+        .data-grid th:nth-child(3),
+        .data-grid td:nth-child(3) {
+            min-width: 280px;
+            white-space: normal;
+            word-break: normal;
+        }
+
+        .data-grid th:nth-child(1),
+        .data-grid td:nth-child(1),
+        .data-grid th:nth-child(4),
+        .data-grid td:nth-child(4),
+        .data-grid th:nth-child(5),
+        .data-grid td:nth-child(5),
+        .data-grid th:nth-child(7),
+        .data-grid td:nth-child(7),
+        .data-grid th:nth-child(8),
+        .data-grid td:nth-child(8),
+        .data-grid th:nth-child(10),
+        .data-grid td:nth-child(10),
+        .data-grid th:nth-child(12),
+        .data-grid td:nth-child(12),
+        .data-grid th:nth-child(14),
+        .data-grid td:nth-child(14),
+        .data-grid th:nth-child(16),
+        .data-grid td:nth-child(16),
+        .data-grid th:nth-child(18),
+        .data-grid td:nth-child(18),
+        .data-grid th:nth-child(20),
+        .data-grid td:nth-child(20),
+        .data-grid th:nth-child(22),
+        .data-grid td:nth-child(22),
+        .data-grid th:nth-child(24),
+        .data-grid td:nth-child(24),
+        .data-grid th:nth-child(25),
+        .data-grid td:nth-child(25),
+        .data-grid th:nth-child(26),
+        .data-grid td:nth-child(26) {
+            white-space: nowrap;
         }
 
         .data-grid th:last-child,
@@ -369,7 +424,7 @@
                 <div class="hero-card">
                     <span class="hero-kicker">Export Operation Hub</span>
                     <h1 class="hero-title">Shipping Document Control</h1>
-                    <p class="hero-subtitle">ติดตามสถานะเอกสารส่งออก, อัปเดตข้อมูล invoice, และเข้าถึงไฟล์แต่ละประเภทได้จากหน้าจอเดียว โดยคงขั้นตอนการทำงานเดิมทั้งหมด</p>
+                   
 
                     <div class="filter-panel">
                         <div class="row g-3 align-items-end">
@@ -408,6 +463,7 @@
                                 </div>
                             </div>
                         </div>
+                        <asp:Label ID="lbError" runat="server" CssClass="error-banner" Visible="False"></asp:Label>
                     </div>
                 </div>
 
@@ -415,7 +471,7 @@
                     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
                         <div>
                             <h2 class="section-title">Document Status Grid</h2>
-                            <p class="section-copy">ตารางด้านล่างยังใช้ GridView เดิมทั้งหมด แต่เปลี่ยนการจัดวางให้เหมาะกับหน้าจอ desktop และ mobile มากขึ้น</p>
+                          
                         </div>
                     </div>
 
@@ -445,7 +501,7 @@
                                         </ItemTemplate>
                                     </asp:TemplateField>
                                     <asp:TemplateField HeaderText="Customer">
-                                        <HeaderStyle Width="250px" />
+                                        <HeaderStyle Width="240px" />
                                         <ItemTemplate>
                                             <asp:Label ID="lblCUNM" runat="server" Text='<%# Eval("CUNM") %>'></asp:Label>
                                         </ItemTemplate>
@@ -485,18 +541,6 @@
                                             <asp:Label ID="lblUSID" runat="server" Text='<%# Eval("SHUSID") %>'></asp:Label>
                                         </ItemTemplate>
                                     </asp:TemplateField>
-                                    <asp:TemplateField HeaderText="INV Doc.">
-                                        <HeaderStyle Width="56px" />
-                                        <ItemStyle Width="56px" />
-                                        <ItemTemplate>
-                                            <asp:Label ID="lblDAT8" runat="server" Text='<%# Eval("SHDAT8") %>'></asp:Label>
-                                        </ItemTemplate>
-                                    </asp:TemplateField>
-                                    <asp:ButtonField ButtonType="Image" HeaderText="Up. INV" ImageUrl="~/Pictures/report.ico" Text="Up." CommandName="UPDAT8">
-                                        <HeaderStyle Width="40px" />
-                                        <ItemStyle Width="40px" HorizontalAlign="Center" />
-                                        <ControlStyle Width="40px" Height="40px" />
-                                    </asp:ButtonField>
                                     <asp:TemplateField HeaderText="Shipping Doc.">
                                         <HeaderStyle Width="56px" />
                                         <ItemStyle Width="56px" />
@@ -505,6 +549,18 @@
                                         </ItemTemplate>
                                     </asp:TemplateField>
                                     <asp:ButtonField ButtonType="Image" HeaderText="Up. Ship" ImageUrl="~/Pictures/report.ico" Text="Up." CommandName="UPDAT1">
+                                        <HeaderStyle Width="40px" />
+                                        <ItemStyle Width="40px" HorizontalAlign="Center" />
+                                        <ControlStyle Width="40px" Height="40px" />
+                                    </asp:ButtonField>
+                                    <asp:TemplateField HeaderText="INV Doc.">
+                                        <HeaderStyle Width="56px" />
+                                        <ItemStyle Width="56px" />
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblDAT8" runat="server" Text='<%# Eval("SHDAT8") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:ButtonField ButtonType="Image" HeaderText="Up. INV" ImageUrl="~/Pictures/report.ico" Text="Up." CommandName="UPDAT8">
                                         <HeaderStyle Width="40px" />
                                         <ItemStyle Width="40px" HorizontalAlign="Center" />
                                         <ControlStyle Width="40px" Height="40px" />
@@ -597,6 +653,11 @@
                                         <ControlStyle Width="40px" Height="40px" />
                                     </asp:ButtonField>
                                     <asp:ButtonField ButtonType="Image" CommandName="Explorer" ImageUrl="~/Pictures/explorer-icon.png" Text="Explorer." Visible="False" />
+                                    <asp:TemplateField HeaderText="STS8" Visible="False">
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblSTS8" runat="server" Text='<%# Eval("SHSTS8") %>'></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
                                     <asp:TemplateField HeaderText="STS1" Visible="False">
                                         <ItemTemplate>
                                             <asp:Label ID="lblSTS1" runat="server" Text='<%# Eval("SHSTS1") %>'></asp:Label>
