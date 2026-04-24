@@ -49,6 +49,27 @@ public partial class SCE066 : System.Web.UI.Page
         }
     }
 
+    private bool IsUploadCommand(string commandName)
+    {
+        return commandName.Equals("UPDAT1") || commandName.Equals("UPDAT2") || commandName.Equals("UPDAT3")
+            || commandName.Equals("UPDAT4") || commandName.Equals("UPDAT5") || commandName.Equals("UPDAT6")
+            || commandName.Equals("UPDAT7") || commandName.Equals("UPDAT8");
+    }
+
+    private string GetUploadDocumentType(string commandName)
+    {
+        if (commandName.Equals("UPDAT1")) return "1";
+        if (commandName.Equals("UPDAT2")) return "2";
+        if (commandName.Equals("UPDAT3")) return "3";
+        if (commandName.Equals("UPDAT4")) return "4";
+        if (commandName.Equals("UPDAT5")) return "5";
+        if (commandName.Equals("UPDAT6")) return "6";
+        if (commandName.Equals("UPDAT7")) return "7";
+        if (commandName.Equals("UPDAT8")) return "8";
+
+        return "";
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
 
@@ -255,7 +276,7 @@ public partial class SCE066 : System.Web.UI.Page
                     _dateto = "99999999";
                 }
 
-                sql_rel = "SELECT shivno,oaorst,trim(shcuno) || '-' || okcunm as cunm,shetdd,shetad,CASE WHEN shstsd = '1' THEN 'Complete' else 'Un-Complete' end as shstsd, " +
+                sql_rel = "SELECT shivno,oaorst,trim(shcuno) || '-' || okcunm as cunm,shetdd,shetad,CASE WHEN shstsd = '1' THEN 'Complete' WHEN shstsd = '2' THEN 'Not Approve' else 'Un-Complete' end as shstsd, " +
                                  "shusid,case when coalesce(shdat8,0) = 0 then coalesce(rtrim(char(invdoc.invdate)), '') else rtrim(char(shdat8)) end as shdat8,shdat1,shdat2,shdat3,shdat4,shdat5,shdat6,shdat7,coalesce(shsts8,'') as shsts8,SHSTS1,SHSTS2,SHSTS3,SHSTS4,SHSTS5,shsts6 ,shsts7  " +
                                  " from itprod.shdoch " +
                                  " left join (select slcono,sldivi,slivno,max(sldate) as invdate from itprod.shdocl where sldatu = '8' group by slcono,sldivi,slivno) invdoc on invdoc.slcono = shcono and invdoc.sldivi = shdivi and invdoc.slivno = shivno " +
@@ -286,12 +307,14 @@ public partial class SCE066 : System.Web.UI.Page
                     sql_rel = sql_rel + " and shstsd = '0'";
                 else if (ddlSTATUS.Text.Equals("1"))
                     sql_rel = sql_rel + " and shstsd = '1'";
+                else if (ddlSTATUS.Text.Equals("2"))
+                    sql_rel = sql_rel + " and shstsd = '2'";
 
                 sql_rel = sql_rel + " order by shetdd,shivno ";
             }
             else
             {
-                sql_rel = "SELECT shivno,oaorst,trim(shcuno) || '-' || okcunm as cunm,shetdd,shetad,CASE WHEN shstsd = '1' THEN 'Complete' else 'Un-Complete' end as shstsd, " +
+                sql_rel = "SELECT shivno,oaorst,trim(shcuno) || '-' || okcunm as cunm,shetdd,shetad,CASE WHEN shstsd = '1' THEN 'Complete' WHEN shstsd = '2' THEN 'Not Approve' else 'Un-Complete' end as shstsd, " +
                              "shusid,case when coalesce(shdat8,0) = 0 then coalesce(rtrim(char(invdoc.invdate)), '') else rtrim(char(shdat8)) end as shdat8,shdat1,shdat2,shdat3,shdat4,shdat5,shdat6,shdat7,coalesce(shsts8,'') as shsts8,SHSTS1,SHSTS2,SHSTS3,SHSTS4,SHSTS5,shsts6,shsts7   " +
                              " from itprod.shdoch " +
                              " left join (select slcono,sldivi,slivno,max(sldate) as invdate from itprod.shdocl where sldatu = '8' group by slcono,sldivi,slivno) invdoc on invdoc.slcono = shcono and invdoc.sldivi = shdivi and invdoc.slivno = shivno " +
@@ -309,6 +332,8 @@ public partial class SCE066 : System.Web.UI.Page
                     sql_rel = sql_rel + " and shstsd = '0'";
                 else if (ddlSTATUS.Text.Equals("1"))
                     sql_rel = sql_rel + " and shstsd = '1'";
+                else if (ddlSTATUS.Text.Equals("2"))
+                    sql_rel = sql_rel + " and shstsd = '2'";
 
                 sql_rel = sql_rel + " order by shetdd,shivno ";
             }
@@ -394,32 +419,16 @@ public partial class SCE066 : System.Web.UI.Page
         ClearError();
         try
         {
-            String _date = DateTime.Now.ToString("yyyyMMdd", new CultureInfo("en-US"));
-            string _datu = "";
-
-            if (e.CommandName.Equals("UPDAT1"))
-                   _datu = "1";
-            if (e.CommandName.Equals("UPDAT2"))
-                   _datu = "2";
-            if (e.CommandName.Equals("UPDAT3"))
-                   _datu = "3";
-            if (e.CommandName.Equals("UPDAT4"))
-                   _datu = "4";
-            if (e.CommandName.Equals("UPDAT5"))
-                   _datu = "5";
-            if (e.CommandName.Equals("UPDAT6"))
-                _datu = "6";
-            if (e.CommandName.Equals("UPDAT7"))
-                _datu = "7";
-            if (e.CommandName.Equals("UPDAT8"))
-                _datu = "8";
+            string commandName = e.CommandName;
+            string password = txtPASS.Text.Trim().ToUpper(new CultureInfo("en-US"));
+            string _datu = GetUploadDocumentType(commandName);
                  
-            if (e.CommandName.Equals("Appr"))
+            if (commandName.Equals("Appr"))
             {
                 int rowIndex = Convert.ToInt32(e.CommandArgument);
                 String _ivno = ((Label)GridView1.Rows[rowIndex].FindControl("lblIVNO")).Text.Trim();
 
-                if (txtPASS.Text.Equals("LGE"))   
+                if (password.Equals("LGE"))   
                 {
                     string sql = "update ITPROD.SHDOCH set " +
                      " SHSTSD = 1 " +
@@ -442,14 +451,14 @@ public partial class SCE066 : System.Web.UI.Page
                 }
             }
 
-            if (e.CommandName.Equals("NotApr"))
+            if (commandName.Equals("NotApr"))
             {
                 int rowIndex = Convert.ToInt32(e.CommandArgument);
                 String _ivno = ((Label)GridView1.Rows[rowIndex].FindControl("lblIVNO")).Text.Trim();
-                if (txtPASS.Text.Equals("LGE")) 
+                if (password.Equals("LGE")) 
                 {
                     string sql = "update ITPROD.SHDOCH set " +
-                     " SHSTSD = 0 " +
+                     " SHSTSD = 2 " +
                      " where SHCONO = 100 AND SHDIVI = 'PFT' " +
                      " and SHIVNO = '" + _ivno + "'";
 
@@ -468,33 +477,33 @@ public partial class SCE066 : System.Web.UI.Page
                 }
             }
 
-            if ((txtPASS.Text.Trim().Equals("LGE") || txtPASS.Text.Trim().Equals("EXPORT"))) 
+            if ((password.Equals("LGE") || password.Equals("EXPORT"))) 
             {
-                if ((e.CommandName.Equals("UPDAT1")) || (e.CommandName.Equals("UPDAT2")) || (e.CommandName.Equals("UPDAT3"))
-                    || (e.CommandName.Equals("UPDAT4")) || (e.CommandName.Equals("UPDAT5")) || (e.CommandName.Equals("UPDAT6")) ||
-                    (e.CommandName.Equals("UPDAT7")) || (e.CommandName.Equals("UPDAT8")))
+                if (IsUploadCommand(commandName))
                 {
                     int rowIndex = Convert.ToInt32(e.CommandArgument);
                     String _ivno = ((Label)GridView1.Rows[rowIndex].FindControl("lblIVNO")).Text.Trim();
-                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + txtPASS.Text.Trim() + "&STATUSD="+ddlSTATUS.Text);
+                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + password + "&STATUSD="+ddlSTATUS.Text, false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
                 }
             }
 
-            if (txtPASS.Text.Trim().Equals("QA"))
+            if (password.Equals("QA"))
             {
-                if (e.CommandName.Equals("UPDAT2"))
+                if (commandName.Equals("UPDAT2"))
                 {
                     int rowIndex = Convert.ToInt32(e.CommandArgument);
                     String _ivno = ((Label)GridView1.Rows[rowIndex].FindControl("lblIVNO")).Text.Trim();
-                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + txtPASS.Text.Trim() + "&STATUSD=" + ddlSTATUS.Text);
+                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + password + "&STATUSD=" + ddlSTATUS.Text, false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
                 }
             }
 
-            if (txtPASS.Text.Trim().Equals("SSS") || txtPASS.Text.Trim().Equals("QA") || txtPASS.Text.Trim().Equals("AUDIT") || txtPASS.Text.Trim().Equals("FA") || txtPASS.Text.Trim().Equals("SI") )
+            if (password.Equals("SSS") || password.Equals("QA") || password.Equals("AUDIT") || password.Equals("FA") || password.Equals("SI") )
             {
-                if ((e.CommandName.Equals("UPDAT1")) || (e.CommandName.Equals("UPDAT2")) || (e.CommandName.Equals("UPDAT3"))
-                    || (e.CommandName.Equals("UPDAT4")) || (e.CommandName.Equals("UPDAT5")) || (e.CommandName.Equals("UPDAT6")) ||
-                    (e.CommandName.Equals("UPDAT7")) || (e.CommandName.Equals("UPDAT8")))
+                if (IsUploadCommand(commandName))
                 {
                     EnsureConnectionClosed();
                     connection.Open();
@@ -502,7 +511,7 @@ public partial class SCE066 : System.Web.UI.Page
                     String _ivno = ((Label)GridView1.Rows[rowIndex].FindControl("lblIVNO")).Text.Trim();
                     string sql_upvw = "";
 
-                    if (txtPASS.Text.Trim().Equals("SSS"))
+                    if (password.Equals("SSS"))
                     {
                         if (_datu.Equals("1"))
                         {
@@ -558,7 +567,7 @@ public partial class SCE066 : System.Web.UI.Page
                         }
                     }
 
-                    if ((txtPASS.Text.Trim().Equals("FA")) || (txtPASS.Text.Equals("SI")))
+                    if ((password.Equals("FA")) || (password.Equals("SI")))
                     {
                         if (_datu.Equals("7"))
                         {
@@ -583,8 +592,15 @@ public partial class SCE066 : System.Web.UI.Page
                         }
                     }
                     EnsureConnectionClosed();
-                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + txtPASS.Text.Trim() + "&STATUSD=" + ddlSTATUS.Text + "&CUNO=" + ddlCUST.Text);
+                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + password + "&STATUSD=" + ddlSTATUS.Text + "&CUNO=" + ddlCUST.Text, false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
                 }
+            }
+
+            if (IsUploadCommand(commandName))
+            {
+                ShowError("Password ไม่มีสิทธิ์ Upload เอกสารนี้ กรุณาตรวจสอบ Password หรือประเภทเอกสารที่เลือก");
             }
         }
         catch (Exception ex)
