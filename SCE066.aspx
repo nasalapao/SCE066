@@ -692,7 +692,7 @@
                         </div>
                     </div>
 
-                    <div class="last-update">@@ Last Update : 02/04/2026 13:41</div>
+                    <div class="last-update">@@ Last Update : 24/04/2026 14:53</div>
                 </div>
 
                 <div class="d-none">

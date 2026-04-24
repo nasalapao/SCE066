@@ -70,6 +70,29 @@ public partial class SCE066 : System.Web.UI.Page
         return "";
     }
 
+    private string GetSelectedCustomerCode()
+    {
+        if (!string.IsNullOrEmpty(ddlCUST.SelectedValue))
+        {
+            return ddlCUST.SelectedValue.Trim();
+        }
+
+        return ddlCUST.Text.Trim();
+    }
+
+    private void ApplySelectedCustomer()
+    {
+        if (!string.IsNullOrEmpty(CUNO.Value))
+        {
+            ListItem item = ddlCUST.Items.FindByValue(CUNO.Value.Trim());
+            if (item != null)
+            {
+                ddlCUST.ClearSelection();
+                item.Selected = true;
+            }
+        }
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
 
@@ -82,6 +105,7 @@ public partial class SCE066 : System.Web.UI.Page
           //  {
             list();
             DDL_Cust();
+            ApplySelectedCustomer();
 
               if (!datepicker1.Value.Equals(""))
               { 
@@ -149,45 +173,47 @@ public partial class SCE066 : System.Web.UI.Page
         try
         {
             string sql_gendata = "";
+            string customerCode = GetSelectedCustomerCode();
+            string customerFilter = "";
 
-            if (!ddlCUST.Text.Equals("0"))
+            if (!customerCode.Equals("0") && !customerCode.Equals(""))
             {
-                ShowData();
+                customerFilter = " and uacuno = '" + customerCode + "'";
+            }
+
+            EnsureConnectionClosed();
+            connection.Open();
+
+            if (!txtIVNO.Text.Trim().Equals(""))
+            {
+                sql_gendata = "insert into itprod.shdoch(shcono,shdivi,shivno,shcuno,shetdd,shstsd,shdat8,shsts8) " +
+                        "select dacono,uadivi,daconn,uacuno,dadsdt,cast('0' as char(1)),0,cast('' as char(1)) from mvxcdtprod.dconsi " +
+                         " left join  " +
+                         " (select distinct uacono,uadivi,uaconn,uacuno,uaortp from mvxcdtprod.odhead) odhead " +
+                         " on uacono = dacono and uaconn = daconn " +
+                         " where dacono = 100 and uacuno like 'ETH%' and uaortp in('TE1','TF1','TE7','TE2') " +
+                         " and daconn = '" + txtIVNO.Text.Trim() + "'" +
+                         customerFilter +
+                         " and  daconn not in(select shivno from itprod.shdoch) ";
             }
             else
             {
-                EnsureConnectionClosed();
-                connection.Open();
+                _datefrom = datepicker1.Value.Substring(6, 4) + datepicker1.Value.Substring(3, 2) + datepicker1.Value.Substring(0, 2);
+                _dateto = datepicker2.Value.Substring(6, 4) + datepicker2.Value.Substring(3, 2) + datepicker2.Value.Substring(0, 2);
 
-                if (!txtIVNO.Text.Trim().Equals(""))
-                {
-                    sql_gendata = "insert into itprod.shdoch(shcono,shdivi,shivno,shcuno,shetdd,shstsd,shdat8,shsts8) " +
-                            "select dacono,uadivi,daconn,uacuno,dadsdt,cast('0' as char(1)),0,cast('' as char(1)) from mvxcdtprod.dconsi " +
-                             " left join  " +
-                             " (select distinct uacono,uadivi,uaconn,uacuno,uaortp from mvxcdtprod.odhead) odhead " +
-                             " on uacono = dacono and uaconn = daconn " +
-                             " where dacono = 100 and uacuno like 'ETH%' and uaortp in('TE1','TF1','TE7','TE2') " +
-                             " and daconn = '" + txtIVNO.Text.Trim() + "'" +
-                             " and  daconn not in(select shivno from itprod.shdoch) ";
-                }
-                else
-                {
-                    _datefrom = datepicker1.Value.Substring(6, 4) + datepicker1.Value.Substring(3, 2) + datepicker1.Value.Substring(0, 2);
-                    _dateto = datepicker2.Value.Substring(6, 4) + datepicker2.Value.Substring(3, 2) + datepicker2.Value.Substring(0, 2);
-
-                    sql_gendata = "insert into itprod.shdoch(shcono,shdivi,shivno,shcuno,shetdd,shstsd,shdat8,shsts8) " +
-                                        "select dacono,uadivi,daconn,uacuno,dadsdt,cast('0' as char(1)),0,cast('' as char(1)) from mvxcdtprod.dconsi " +
-                                         " left join  " +
-                                         " (select distinct uacono,uadivi,uaconn,uacuno,uaortp from mvxcdtprod.odhead) odhead " +
-                                         " on uacono = dacono and uaconn = daconn " +
-                                         " where dacono = 100 and uacuno like 'ETH%' and uaortp in('TE1','TF1','TE7','TE2') " +
-                                         " and dadsdt >= " + _datefrom + " and dadsdt <= " + _dateto +
-                                         " and  daconn not in(select shivno from itprod.shdoch) ";
-                }
-
-                iDB2Command comm_gendata = new iDB2Command(sql_gendata, connection);
-                comm_gendata.ExecuteNonQuery();
+                sql_gendata = "insert into itprod.shdoch(shcono,shdivi,shivno,shcuno,shetdd,shstsd,shdat8,shsts8) " +
+                                    "select dacono,uadivi,daconn,uacuno,dadsdt,cast('0' as char(1)),0,cast('' as char(1)) from mvxcdtprod.dconsi " +
+                                     " left join  " +
+                                     " (select distinct uacono,uadivi,uaconn,uacuno,uaortp from mvxcdtprod.odhead) odhead " +
+                                     " on uacono = dacono and uaconn = daconn " +
+                                     " where dacono = 100 and uacuno like 'ETH%' and uaortp in('TE1','TF1','TE7','TE2') " +
+                                     " and dadsdt >= " + _datefrom + " and dadsdt <= " + _dateto +
+                                     customerFilter +
+                                     " and  daconn not in(select shivno from itprod.shdoch) ";
             }
+
+            iDB2Command comm_gendata = new iDB2Command(sql_gendata, connection);
+            comm_gendata.ExecuteNonQuery();
         }
         catch (Exception ex)
         {
@@ -204,42 +230,48 @@ public partial class SCE066 : System.Web.UI.Page
     {
         try
         {
-            if (ddlCUST.Text.Equals("0"))
+            string customerCode = GetSelectedCustomerCode();
+            string customerFilter = "";
+            if (!customerCode.Equals("0") && !customerCode.Equals(""))
             {
-                EnsureConnectionClosed();
-                connection.Open();
+                customerFilter = " and shcuno = '" + customerCode + "'";
+            }
 
-                string sql_data = "";
-                if (!txtIVNO.Text.Trim().Equals(""))
+            EnsureConnectionClosed();
+            connection.Open();
+
+            string sql_data = "";
+            if (!txtIVNO.Text.Trim().Equals(""))
+            {
+                sql_data = "select * from itprod.shdoch " +
+                           " where shcono = 100 and shdivi = 'PFT' and shivno = '" + txtIVNO.Text.Trim() + "'" +
+                           customerFilter;
+            }
+            else
+            {
+                _datefrom = datepicker1.Value.Substring(6, 4) + datepicker1.Value.Substring(3, 2) + datepicker1.Value.Substring(0, 2);
+                _dateto = datepicker2.Value.Substring(6, 4) + datepicker2.Value.Substring(3, 2) + datepicker2.Value.Substring(0, 2);
+
+                sql_data = "select * from itprod.shdoch " +
+                           " where shcono =  100 and shdivi = 'PFT' and shetdd >= " + _datefrom +
+                           " and   shetdd <= " + _dateto +
+                           customerFilter;
+            }
+
+            iDB2Command comm_data = new iDB2Command(sql_data, connection);
+            iDB2DataReader reader_data = comm_data.ExecuteReader();
+
+            while (reader_data.Read())
+            {
+                if (!txtPASS.Text.Equals("AUDIT"))
                 {
-                    sql_data = "select * from itprod.shdoch " +
-                               " where shcono = 100 and shdivi = 'PFT' and shivno = '" + txtIVNO.Text.Trim() + "'";
-                }
-                else
-                {
-                    _datefrom = datepicker1.Value.Substring(6, 4) + datepicker1.Value.Substring(3, 2) + datepicker1.Value.Substring(0, 2);
-                    _dateto = datepicker2.Value.Substring(6, 4) + datepicker2.Value.Substring(3, 2) + datepicker2.Value.Substring(0, 2);
-
-                    sql_data = "select * from itprod.shdoch " +
-                               " where shcono =  100 and shdivi = 'PFT' and shetdd >= " + _datefrom +
-                               " and   shetdd <= " + _dateto;
-                }
-
-                iDB2Command comm_data = new iDB2Command(sql_data, connection);
-                iDB2DataReader reader_data = comm_data.ExecuteReader();
-
-                while (reader_data.Read())
-                {
-                    if (!txtPASS.Text.Equals("AUDIT"))
-                    {
-                        string sql_upetd = "UPDATE ITPROD.SHDOCH X " +
-                                           " SET X.SHETDD = (SELECT Y.DADSDT FROM MVXCDTPROD.DCONSI Y " +
-                                           "   WHERE X.SHCONO = Y.DACONO AND " +
-                                           "         X.SHIVNO = Y.DACONN) " +
-                                           " WHERE X.SHCONO = 100 AND X.SHDIVI = 'PFT' AND X.SHIVNO = '" + reader_data["shivno"].ToString().Trim() + "'";
-                        iDB2Command comm_upetd = new iDB2Command(sql_upetd, connection);
-                        comm_upetd.ExecuteNonQuery();
-                    }
+                    string sql_upetd = "UPDATE ITPROD.SHDOCH X " +
+                                       " SET X.SHETDD = (SELECT Y.DADSDT FROM MVXCDTPROD.DCONSI Y " +
+                                       "   WHERE X.SHCONO = Y.DACONO AND " +
+                                       "         X.SHIVNO = Y.DACONN) " +
+                                       " WHERE X.SHCONO = 100 AND X.SHDIVI = 'PFT' AND X.SHIVNO = '" + reader_data["shivno"].ToString().Trim() + "'";
+                    iDB2Command comm_upetd = new iDB2Command(sql_upetd, connection);
+                    comm_upetd.ExecuteNonQuery();
                 }
             }
         }
@@ -262,6 +294,7 @@ public partial class SCE066 : System.Web.UI.Page
             connection.Open();
 
             _pass = txtPASS.Text.Trim();
+            string customerCode = GetSelectedCustomerCode();
 
             string sql_rel = "";
             if (txtIVNO.Text.Trim().Equals(""))
@@ -290,10 +323,10 @@ public partial class SCE066 : System.Web.UI.Page
                                  "   LEFT JOIN MVXCDTPROD.OOLINE ON OBORNO = OQRIDN AND OBPONR = URRIDL  WHERE OQCONO = 100 AND OQTRDT >= 20180101 group by oqconn) data_sts on oqconn = shivno ";
   
 
-                if (!ddlCUST.Text.Equals("0") && !ddlCUST.Text.Equals(""))
+                if (!customerCode.Equals("0") && !customerCode.Equals(""))
                 {
                     sql_rel = sql_rel +
-                              " where shcuno = '" + ddlCUST.Text.Trim() + "'" +
+                              " where shcuno = '" + customerCode + "'" +
                               " and shetdd >= " + _datefrom +
                               " and shetdd <= " + _dateto;
                 }
@@ -592,7 +625,7 @@ public partial class SCE066 : System.Web.UI.Page
                         }
                     }
                     EnsureConnectionClosed();
-                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + password + "&STATUSD=" + ddlSTATUS.Text + "&CUNO=" + ddlCUST.Text, false);
+                    Response.Redirect("~/SCE066_1.aspx?INVNO=" + _ivno + "&DATU=" + _datu + "&DATEFROM=" + datepicker1.Value + "&DATETO=" + datepicker2.Value + "&PASSW=" + password + "&STATUSD=" + ddlSTATUS.Text + "&CUNO=" + GetSelectedCustomerCode(), false);
                     Context.ApplicationInstance.CompleteRequest();
                     return;
                 }
