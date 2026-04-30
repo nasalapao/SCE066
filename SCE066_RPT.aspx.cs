@@ -145,17 +145,21 @@ public partial class SCE066_RPT : System.Web.UI.Page
        
         DataTable dt = new DataTable();
 
-        string sql = "select shusid,shivno,oaorst,shcuno,okcunm,drtx40,shetdd,shetad,dacdld,diff_dat1,diff_dat2,diff_dat3,diff_dat4,diff_dat5,diff_dat6,diff_dat7,shstatus," +
+        string sql = "select shusid,shivno,oaorst,shcuno,okcunm,drtx40,shetdd,shetad,dacdld,diff_dat1,diff_dat8,diff_dat2,diff_dat3,diff_dat4,diff_dat5,diff_dat6,diff_dat7,shdat8,shstatus," +
                      " trim(slremk1) || ' ' ||  case when trim(slremk2) is null then '' else trim(slremk2) end  || ' ' || case when trim(slremk3) is null then '' else trim(slremk3) end " +
                      " || ' ' || case when trim(slremk4) is null then '' else trim(slremk4) end || ' ' || case when trim(slremk5) is null then '' else trim(slremk5) end || '' || case when trim(slremk6) is null then '' else trim(slremk6) end as slremk " +
                      " , csytab_tepy.cttx15 as payterm,UATEDL As DeliTerm " +
                      "from " +
                      "   ( " +
                      "   select shcono,shdivi,shusid,shivno,shcuno,shetdd,shetad,darout,dacdld,shdat1,shdat2,shdat3,shdat4,shdat5, " +
+                     "   case when coalesce(shdat8,0) = 0 then coalesce(rtrim(char(invdoc.invdate)), '') else rtrim(char(shdat8)) end as shdat8, " +
                      "  DAYS(SUBSTR( CHAR(dacdld ),1,4) ||'-' || SUBSTR(CHAR (dacdld),5,2) || '-' || SUBSTR(CHAR (dacdld ),7,2))  as deadlinedate, " +
                      "   DAYS(SUBSTR( CHAR(shdat1),1,4) ||'-' || SUBSTR(CHAR (shdat1),5,2) || '-' || SUBSTR(CHAR (shdat1),7,2))  as date1, " +
                      "   DAYS(SUBSTR( CHAR(shetdd),1,4) ||'-' || SUBSTR(CHAR (shetdd),5,2) || '-' || SUBSTR(CHAR (shetdd),7,2)) - " +
                      "   DAYS(SUBSTR( CHAR(shdat1),1,4) ||'-' || SUBSTR(CHAR (shdat1),5,2) || '-' || SUBSTR(CHAR (shdat1),7,2)) AS DIFF_DAT1, " +
+                     "   case when coalesce(shdat8,0) = 0 and invdoc.invdate is null then null else " +
+                     "   DAYS(SUBSTR( CHAR(shetdd),1,4) ||'-' || SUBSTR(CHAR (shetdd),5,2) || '-' || SUBSTR(CHAR (shetdd),7,2)) - " +
+                     "   DAYS(SUBSTR( CHAR(case when coalesce(shdat8,0) = 0 then invdoc.invdate else shdat8 end),1,4) ||'-' || SUBSTR(CHAR (case when coalesce(shdat8,0) = 0 then invdoc.invdate else shdat8 end),5,2) || '-' || SUBSTR(CHAR (case when coalesce(shdat8,0) = 0 then invdoc.invdate else shdat8 end),7,2)) end AS DIFF_DAT8, " +
                      "   DAYS(SUBSTR( CHAR(shetdd),1,4) ||'-' || SUBSTR(CHAR (shetdd),5,2) || '-' || SUBSTR(CHAR (shetdd),7,2)) - " +
                      "   DAYS(SUBSTR( CHAR(shdat2),1,4) ||'-' || SUBSTR(CHAR (shdat2),5,2) || '-' || SUBSTR(CHAR (shdat2),7,2)) AS DIFF_DAT2, " +
                      "   DAYS(SUBSTR( CHAR(shetdd),1,4) ||'-' || SUBSTR(CHAR (shetdd),5,2) || '-' || SUBSTR(CHAR (shetdd),7,2)) - " +
@@ -170,6 +174,7 @@ public partial class SCE066_RPT : System.Web.UI.Page
                      "   DAYS(SUBSTR( CHAR(shdat7),1,4) ||'-' || SUBSTR(CHAR (shdat7),5,2) || '-' || SUBSTR(CHAR (shdat7),7,2)) AS DIFF_DAT7 " +
                      "   ,case when shstsd = '0' then 'Un-Complete' else 'Complete' end shstatus " +
                      "   from itprod.shdoch " +
+                     "   left join (select slcono,sldivi,slivno,max(sldate) as invdate from itprod.shdocl where sldatu = '8' group by slcono,sldivi,slivno) invdoc on invdoc.slcono = shcono and invdoc.sldivi = shdivi and invdoc.slivno = shivno " +
                      "   left join mvxcdtprod.dconsi on dacono = shcono and daconn = shivno " +
                      "  where shetdd >= " + _datefrom + " and shetdd <= " + _dateto;
 
@@ -233,7 +238,7 @@ public partial class SCE066_RPT : System.Web.UI.Page
 
         if (ddlTYPE.Text.Trim().Equals("Delay"))
         {
-            sql = sql + "   and (diff_dat1 < 0 or diff_dat2 < 0 or diff_dat3 < 0 or diff_dat4 < 0 or diff_dat5 < 0 or diff_dat6 < 0 or diff_dat7 < 0) ";
+            sql = sql + "   and (diff_dat1 < 0 or diff_dat8 < 0 or diff_dat2 < 0 or diff_dat3 < 0 or diff_dat4 < 0 or diff_dat5 < 0 or diff_dat6 < 0 or diff_dat7 < 0) ";
         }
         sql = sql + " order by shusid , shetdd ";
         

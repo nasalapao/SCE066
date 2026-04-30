@@ -415,6 +415,15 @@
             $('#<%= datepicker1.ClientID %>').datepicker({ dateFormat: 'dd/mm/yy' }).val();
             $('#<%= datepicker2.ClientID %>').datepicker({ dateFormat: 'dd/mm/yy' }).val();
         });
+
+        function openPrintReport() {
+            var dateFrom = document.getElementById('<%= datepicker1.ClientID %>').value;
+            var dateTo = document.getElementById('<%= datepicker2.ClientID %>').value;
+            var url = 'SCE066_RPT.aspx?DATEFROM=' + encodeURIComponent(dateFrom) + '&DATETO=' + encodeURIComponent(dateTo);
+
+            window.open(url, '_blank');
+            return false;
+        }
     </script>
 </head>
 <body>
@@ -460,7 +469,7 @@
                             <div class="col-12">
                                 <div class="action-stack">
                                     <asp:ImageButton ID="ImageButton1" runat="server" CssClass="icon-action search-action" ImageUrl="~/Pictures/view.ico" OnClick="ImageButton1_Click" ToolTip="Search" />
-                                    <asp:ImageButton ID="imgbtnPrint" runat="server" CssClass="icon-action report-action" ImageUrl="~/Pictures/report-icon-13338.jpg" ToolTip="Report" OnClick="imgbtnPrint_Click" />
+                                    <asp:ImageButton ID="imgbtnPrint" runat="server" CssClass="icon-action report-action" ImageUrl="~/Pictures/report-icon-13338.jpg" ToolTip="Report" OnClientClick="return openPrintReport();" />
                                 </div>
                             </div>
                         </div>
