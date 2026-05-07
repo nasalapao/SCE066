@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Case Email ปัจจุบัน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #f3f6fa;
+            --surface: #ffffff;
+            --line: #dce6f0;
+            --title: #173a59;
+            --text: #1f2933;
+            --muted: #5b6b7a;
+            --blue: #1f4e79;
+            --gray: #5a6f85;
+            --green: #15803d;
+            --red: #dc2626;
+            --amber: #ca8a04;
+            --note: #fff8e1;
+            --note-line: #facc15;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #dfe7ef;
+            color: var(--text);
+            font-family: "Noto Sans Thai", "Segoe UI", Arial, sans-serif;
+        }
+
+        .slide {
+            width: 1600px;
+            min-height: 900px;
+            padding: 64px 70px 62px;
+            background: var(--bg);
+        }
+
+        .title {
+            margin: 0;
+            color: var(--title);
+            font-size: 50px;
+            line-height: 1.15;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            margin: 8px 0 34px;
+            color: var(--muted);
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 2px solid var(--line);
+            border-radius: 14px;
+        }
+
+        .recipient-card {
+            min-height: 112px;
+            display: grid;
+            grid-template-columns: 205px 168px 1fr;
+            gap: 12px 24px;
+            align-items: center;
+            padding: 20px 30px;
+        }
+
+        .recipient-title {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 6px 18px;
+            border-radius: 9px;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .badge.small {
+            min-height: 30px;
+            font-size: 17px;
+        }
+
+        .blue {
+            background: var(--blue);
+        }
+
+        .gray {
+            background: var(--gray);
+        }
+
+        .green {
+            background: var(--green);
+        }
+
+        .red {
+            background: var(--red);
+        }
+
+        .amber {
+            background: var(--amber);
+        }
+
+        .recipient-text {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .recipient-text.small {
+            color: var(--muted);
+            font-size: 19px;
+        }
+
+        .case-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-top: 48px;
+        }
+
+        .case-card {
+            min-height: 355px;
+            padding: 22px;
+        }
+
+        .case-title {
+            margin: 30px 0 24px;
+            font-size: 28px;
+            line-height: 1.22;
+            font-weight: 700;
+        }
+
+        .case-main {
+            margin: 0 0 18px;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .case-sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 19px;
+            font-weight: 500;
+        }
+
+        .connector {
+            width: 3px;
+            height: 40px;
+            margin: 34px 0 0 150px;
+            background: #b8c7d6;
+            position: relative;
+        }
+
+        .connector::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: -5px;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 10px solid #b8c7d6;
+        }
+
+        .connector.danger {
+            background: repeating-linear-gradient(to bottom, var(--red) 0 8px, transparent 8px 16px);
+        }
+
+        .connector.danger::after {
+            border-top-color: var(--red);
+        }
+
+        .result {
+            width: 170px;
+            min-height: 42px;
+            margin-top: 12px;
+            border-radius: 9px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .case-note {
+            margin-top: 26px;
+            color: var(--muted);
+            font-size: 19px;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        .case-note .tiny {
+            display: block;
+            margin-top: 8px;
+            color: #6b7280;
+            font-size: 17px;
+        }
+
+        .decision {
+            margin-top: 56px;
+            min-height: 96px;
+            padding: 24px 30px;
+            border: 2px solid var(--note-line);
+            border-radius: 12px;
+            background: var(--note);
+        }
+
+        .decision-title {
+            margin: 0 0 12px;
+            color: #713f12;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .decision-text {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        @media print {
+            body {
+                display: block;
+                background: #fff;
+            }
+
+            .slide {
+                width: 100vw;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="slide">
+        <h1 class="title">Case Email ปัจจุบัน</h1>
+        <p class="subtitle">Shipping Document Control - สรุปตาม code ปัจจุบัน</p>
+
+        <section class="card recipient-card">
+            <h2 class="recipient-title">Recipient Rule</h2>
+            <span class="badge blue">DEV</span>
+            <p class="recipient-text">siripong.j@patayafood.com</p>
+            <span></span>
+            <span class="badge gray small">PROD</span>
+            <p class="recipient-text small">Sales: salessupportgroup / salessupportnft | QC: email จาก SHCUMAIL.smemal1</p>
+        </section>
+
+        <section class="case-grid">
+            <article class="card case-card">
+                <span class="badge blue">Case 1</span>
+                <h2 class="case-title">Approve</h2>
+                <p class="case-main">Password = LGE</p>
+                <p class="case-sub">Update: SHSTSD = 1</p>
+                <div class="connector"></div>
+                <div class="result green">ส่ง Email</div>
+                <p class="case-note">To: Sales Support<span class="tiny">Subject: Complete Upload</span></p>
+            </article>
+
+            <article class="card case-card">
+                <span class="badge blue">Case 2</span>
+                <h2 class="case-title">QA Upload</h2>
+                <p class="case-main">PASSW = QA</p>
+                <p class="case-sub">DATU = 2 (QA Doc)</p>
+                <div class="connector"></div>
+                <div class="result green">ส่ง Email</div>
+                <p class="case-note">To: Sales Support<span class="tiny">Subject: New Upload / QA Doc</span></p>
+            </article>
+
+            <article class="card case-card">
+                <span class="badge blue">Case 3</span>
+                <h2 class="case-title">Upload Shipping Doc</h2>
+                <p class="case-main">PASSW != QA/AUDIT</p>
+                <p class="case-sub">DATU = 1</p>
+                <div class="connector"></div>
+                <div class="result green">ส่ง Email</div>
+                <p class="case-note">
+                    To: ITPROD.SHCUMAIL.SMEMAL1
+                    <span class="tiny">ETH0023 / ETH0142:</span>
+                    <span class="tiny">treenate, daranee @patayafood.com</span>
+                </p>
+            </article>
+
+            <article class="card case-card">
+                <span class="badge amber">Case 4</span>
+                <h2 class="case-title">ไม่ส่ง Email</h2>
+                <p class="case-main">Not Approve</p>
+                <p class="case-sub">Update: SHSTSD = 2</p>
+                <div class="connector danger"></div>
+                <div class="result red">ไม่แจ้งใคร</div>
+                <p class="case-note">รวมถึง upload DATU 2-8<span class="tiny">ยกเว้น QA upload DATU=2</span></p>
+            </article>
+        </section>
+
+        <section class="decision">
+            <h2 class="decision-title">คำถามสำหรับ User</h2>
+            <p class="decision-text">ต้องการให้ระบบส่ง email ให้ลูกค้าในขั้นตอนไหน และส่งอย่างไร เช่น หลัง Upload Shipping Doc สำเร็จ, หลัง Approve, หรือเมื่อเอกสารถูก Not Approve? ต้องแนบไฟล์อะไรไปกับ email บ้าง เช่น Shipping Doc ไฟล์ล่าสุด, Invoice, P/L หรือแนบทุกไฟล์ของ invoice?</p>
+        </section>
+    </main>
+</body>
+</html>

@@ -288,18 +288,18 @@ public partial class SCE066_1 : System.Web.UI.Page
         iDB2Command comm_last = new iDB2Command(sql_last, connection);
         iDB2DataReader reader_last = comm_last.ExecuteReader();
 
-        string lastDate = "0";
+        string lastDate = "";
         if (reader_last.Read() && reader_last["lastdate"] != DBNull.Value)
         {
             lastDate = reader_last["lastdate"].ToString().Trim();
-            if (lastDate.Equals(""))
-            {
-                lastDate = "0";
-            }
         }
 
+        string dateValue = lastDate.Equals("") && ddlDATU.Text.Trim().Equals("1")
+            ? "NULL"
+            : (lastDate.Equals("") ? "0" : lastDate);
+
         string sql_uphead = "update itprod.shdoch set " +
-                            dateField + " = " + lastDate + ", " +
+                            dateField + " = " + dateValue + ", " +
                             statusField + " = '' " +
                             " where shcono = 100 and shdivi = 'PFT' " +
                             " and shivno = '" + txtIVNO.Text.Trim() + "'";

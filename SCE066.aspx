@@ -199,30 +199,30 @@
 
         .grid-wrap {
             border-radius: 10px;
-            overflow-x: auto;
+            overflow-x: visible;
         }
 
         .data-grid {
             width: 100%;
             margin-bottom: 0;
-            table-layout: auto;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 0;
             color: var(--text-main);
-            font-size: 0.84rem;
-            min-width: 1760px;
+            font-size: 0.76rem;
+            min-width: 0;
         }
 
         .data-grid th {
             position: sticky;
             top: 0;
             z-index: 1;
-            padding: 11px 6px;
+            padding: 9px 4px;
             border: 0;
             border-right: 1px solid rgba(255, 255, 255, 0.18);
             background: #3256b3;
             color: #fff;
-            font-size: 0.8rem;
+            font-size: 0.72rem;
             font-weight: 600;
             line-height: 1.35;
             white-space: normal;
@@ -230,7 +230,7 @@
         }
 
         .data-grid td {
-            padding: 10px 6px;
+            padding: 8px 4px;
             vertical-align: middle;
             border-bottom: 1px solid rgba(31, 41, 51, 0.05);
             border-right: 1px solid rgba(31, 41, 51, 0.05);
@@ -242,7 +242,7 @@
 
         .data-grid th:nth-child(3),
         .data-grid td:nth-child(3) {
-            min-width: 280px;
+            width: 17%;
             white-space: normal;
             word-break: normal;
         }
@@ -298,11 +298,11 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 66px;
-            min-height: 34px;
-            padding: 5px 12px;
+            min-width: 54px;
+            min-height: 30px;
+            padding: 4px 9px;
             border-radius: 8px;
-            font-size: 0.94rem;
+            font-size: 0.8rem;
             font-weight: 700;
             line-height: 1;
             text-decoration: none;
@@ -336,18 +336,18 @@
         }
 
         .data-grid input[type="image"] {
-            max-width: 14px;
-            max-height: 14px;
-            width: 14px;
-            height: 14px;
+            max-width: 13px;
+            max-height: 13px;
+            width: 13px;
+            height: 13px;
         }
 
         .data-grid td:nth-child(25) input[type="image"],
         .data-grid td:nth-child(26) input[type="image"] {
-            width: 25px !important;
-            height: 25px !important;
-            max-width: 25px !important;
-            max-height: 25px !important;
+            width: 22px !important;
+            height: 22px !important;
+            max-width: 22px !important;
+            max-height: 22px !important;
         }
 
         .data-grid input[type="text"] {
