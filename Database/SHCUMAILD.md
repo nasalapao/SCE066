@@ -20,7 +20,28 @@ CREATE TABLE ITPROD.SHCUMAILD (
 
     CONSTRAINT PK_SHCUMAILD PRIMARY KEY (CUSTOMER_CODE, RECIPIENT_TYPE, EMAIL_SEQ),
     CONSTRAINT UQ_SHCUMAILD_01 UNIQUE (CUSTOMER_CODE, RECIPIENT_TYPE, EMAIL_ADDRESS),
-    CONSTRAINT CK_SHCUMAILD_TYPE CHECK (RECIPIENT_TYPE IN ('TO', 'CC')),
+    CONSTRAINT CK_SHCUMAILD_STATUS CHECK (ACTIVE_STATUS IN ('Y', 'N'))
+);
+```
+
+## DB2 Recreate Script
+
+> Warning: `DROP TABLE` จะลบข้อมูลใน `ITPROD.SHCUMAILD` ทั้งหมด ควร backup/export ข้อมูลก่อนรัน
+
+```sql
+DROP TABLE ITPROD.SHCUMAILD;
+
+CREATE TABLE ITPROD.SHCUMAILD (
+    CUSTOMER_CODE    CHAR(10)      NOT NULL,
+    RECIPIENT_TYPE   CHAR(2)       NOT NULL,
+    EMAIL_SEQ        INTEGER       NOT NULL,
+    EMAIL_ADDRESS    VARCHAR(254)  NOT NULL,
+    ACTIVE_STATUS    CHAR(1)       NOT NULL DEFAULT 'Y',
+    CREATED_DATE     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_DATE     TIMESTAMP,
+
+    CONSTRAINT PK_SHCUMAILD PRIMARY KEY (CUSTOMER_CODE, RECIPIENT_TYPE, EMAIL_SEQ),
+    CONSTRAINT UQ_SHCUMAILD_01 UNIQUE (CUSTOMER_CODE, RECIPIENT_TYPE, EMAIL_ADDRESS),
     CONSTRAINT CK_SHCUMAILD_STATUS CHECK (ACTIVE_STATUS IN ('Y', 'N'))
 );
 ```
@@ -30,7 +51,7 @@ CREATE TABLE ITPROD.SHCUMAILD (
 | Field | Type | Required | Default | Key | Description |
 |---|---:|---|---|---|---|
 | `CUSTOMER_CODE` | `CHAR(10)` | Yes |  | PK, UQ | รหัสลูกค้า/ETH code เช่น `ETH0121`; ใช้ `ALL` สำหรับ CC กลางทุกฉบับ |
-| `RECIPIENT_TYPE` | `CHAR(2)` | Yes |  | PK, UQ | ประเภทผู้รับ: `TO` หรือ `CC` |
+| `RECIPIENT_TYPE` | `CHAR(2)` | Yes |  | PK, UQ | ประเภทผู้รับ เช่น `TO`, `CC` หรือค่าอื่นตามที่ระบบต้องใช้ |
 | `EMAIL_SEQ` | `INTEGER` | Yes |  | PK | ลำดับ email ตาม Excel |
 | `EMAIL_ADDRESS` | `VARCHAR(254)` | Yes |  | UQ | Email address |
 | `ACTIVE_STATUS` | `CHAR(1)` | Yes | `Y` |  | สถานะใช้งาน: `Y` ใช้งาน, `N` ปิดใช้งาน |
