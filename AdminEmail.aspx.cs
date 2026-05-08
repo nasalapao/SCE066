@@ -295,9 +295,9 @@ public partial class AdminEmail : Page
             return false;
         }
 
-        if (recipientType != "TO" && recipientType != "CC")
+        if (recipientType != "TO" && recipientType != "CC" && recipientType != "NOTICE")
         {
-            ShowError("Recipient Type ต้องเป็น TO หรือ CC");
+            ShowError("Recipient Type ต้องเป็น TO, CC หรือ NOTICE");
             return false;
         }
 

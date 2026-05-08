@@ -179,10 +179,12 @@
                     <ul class="site-menu">
                         <li><a href="<%= ResolveUrl("~/Home.aspx") %>">Home</a></li>
                         <li><a href="<%= ResolveUrl("~/SCE066.aspx") %>">SCE066</a></li>
+                        <li><a href="<%= ResolveUrl("~/CustomerEmailSend.aspx") %>">Customer Email</a></li>
                         <li>
                             <a href="#" aria-haspopup="true">Admin</a>
                             <ul class="submenu">
                                 <li><a href="<%= ResolveUrl("~/AdminEmail.aspx") %>">Email Management</a></li>
+                                <li><a href="<%= ResolveUrl("~/AdminEmailTemplate.aspx") %>">Email Template</a></li>
                             </ul>
                         </li>
                     </ul>

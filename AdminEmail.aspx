@@ -216,6 +216,7 @@
                         <asp:DropDownList ID="ddlRecipientType" runat="server" CssClass="field-control">
                             <asp:ListItem Text="TO" Value="TO" />
                             <asp:ListItem Text="CC" Value="CC" />
+                            <asp:ListItem Text="NOTICE" Value="NOTICE" />
                         </asp:DropDownList>
                     </div>
                     <div class="col-12 col-md-4">

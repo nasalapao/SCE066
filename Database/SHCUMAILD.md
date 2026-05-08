@@ -11,7 +11,7 @@
 ```sql
 CREATE TABLE ITPROD.SHCUMAILD (
     CUSTOMER_CODE    CHAR(10)      NOT NULL,
-    RECIPIENT_TYPE   CHAR(2)       NOT NULL,
+    RECIPIENT_TYPE   CHAR(10)      NOT NULL,
     EMAIL_SEQ        INTEGER       NOT NULL,
     EMAIL_ADDRESS    VARCHAR(254)  NOT NULL,
     ACTIVE_STATUS    CHAR(1)       NOT NULL DEFAULT 'Y',
@@ -33,7 +33,7 @@ DROP TABLE ITPROD.SHCUMAILD;
 
 CREATE TABLE ITPROD.SHCUMAILD (
     CUSTOMER_CODE    CHAR(10)      NOT NULL,
-    RECIPIENT_TYPE   CHAR(2)       NOT NULL,
+    RECIPIENT_TYPE   CHAR(10)      NOT NULL,
     EMAIL_SEQ        INTEGER       NOT NULL,
     EMAIL_ADDRESS    VARCHAR(254)  NOT NULL,
     ACTIVE_STATUS    CHAR(1)       NOT NULL DEFAULT 'Y',
@@ -51,7 +51,7 @@ CREATE TABLE ITPROD.SHCUMAILD (
 | Field | Type | Required | Default | Key | Description |
 |---|---:|---|---|---|---|
 | `CUSTOMER_CODE` | `CHAR(10)` | Yes |  | PK, UQ | รหัสลูกค้า/ETH code เช่น `ETH0121`; ใช้ `ALL` สำหรับ CC กลางทุกฉบับ |
-| `RECIPIENT_TYPE` | `CHAR(2)` | Yes |  | PK, UQ | ประเภทผู้รับ เช่น `TO`, `CC` หรือค่าอื่นตามที่ระบบต้องใช้ |
+| `RECIPIENT_TYPE` | `CHAR(10)` | Yes |  | PK, UQ | ประเภทผู้รับ เช่น `TO`, `CC`, `NOTICE` หรือค่าอื่นตามที่ระบบต้องใช้ |
 | `EMAIL_SEQ` | `INTEGER` | Yes |  | PK | ลำดับ email ตาม Excel |
 | `EMAIL_ADDRESS` | `VARCHAR(254)` | Yes |  | UQ | Email address |
 | `ACTIVE_STATUS` | `CHAR(1)` | Yes | `Y` |  | สถานะใช้งาน: `Y` ใช้งาน, `N` ปิดใช้งาน |
@@ -103,4 +103,5 @@ ORDER BY RECIPIENT_TYPE DESC, CUSTOMER_CODE, EMAIL_SEQ;
 
 - ตารางนี้ไม่แก้หรือแทนที่ `ITPROD.SHCUMAIL` เดิม
 - ใช้สำหรับ email invoice ตามไฟล์ Excel
+- ใช้ `RECIPIENT_TYPE = 'NOTICE'` กับ `CUSTOMER_CODE = 'ALL'` สำหรับผู้รับเมลแจ้งงานภายในหลัง upload INV Doc
 - หน้า Admin สามารถใช้ `ACTIVE_STATUS` เพื่อปิด email โดยไม่ต้องลบข้อมูล

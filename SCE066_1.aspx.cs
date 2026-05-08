@@ -11,6 +11,7 @@ using System.Data;
 using System.Globalization;
 using System.Net;
 using System.IO;
+using System.Security.Claims;
 
 using System.Net;
 using System.Net.Mail;
@@ -569,6 +570,11 @@ public partial class SCE066_1 : System.Web.UI.Page
                 iDB2Command comm_uphead = new iDB2Command(sql_uphead, connection);
                 comm_uphead.ExecuteNonQuery();
 
+                if (ddlDATU.Text.Equals("8"))
+                {
+                    SendInvoiceUploadNotice(txtIVNO.Text.Trim(), custname);
+                }
+
                 if (ddlDATU.Text.Equals("1"))
                 {
                     string sql_checkcustmail = "select * from itprod.SHCUMAIL " +
@@ -842,6 +848,58 @@ public partial class SCE066_1 : System.Web.UI.Page
         }
     }
 
+    private void SendInvoiceUploadNotice(string invoiceNo, string customerCode)
+    {
+        string customerName = GetCustomerName(customerCode);
+        string manageUrl = host.BuildUrl("~/CustomerEmailSend.aspx?INVNO=" + HttpUtility.UrlEncode(invoiceNo));
+        string sentUser = GetCurrentPersonCode();
 
+        EmailSender service = new EmailSender();
+        string errorMessage;
+        bool success = service.SendUploadNotice(invoiceNo, customerCode, customerName, manageUrl, sentUser, out errorMessage);
 
+        if (!success)
+        {
+            ShowError("ส่ง Email แจ้งงาน Invoice ไม่สำเร็จ : " + errorMessage);
+        }
+    }
+
+    private string GetCustomerName(string customerCode)
+    {
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT OKCUNM
+              FROM MVXCDTPROD.OCUSMA
+             WHERE OKCONO = 100
+               AND OKCUNO = @CUSTOMER_CODE";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@CUSTOMER_CODE", customerCode);
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError || dt.Rows.Count == 0)
+        {
+            return "";
+        }
+
+        return Convert.ToString(dt.Rows[0]["OKCUNM"]).Trim();
+    }
+
+    private string GetCurrentPersonCode()
+    {
+        HttpCookie cookie = Request.Cookies["SCE066_TOKEN"];
+        if (cookie == null || string.IsNullOrWhiteSpace(cookie.Value))
+        {
+            return "";
+        }
+
+        ClaimsPrincipal principal = JwtHelper.ValidateToken(cookie.Value);
+        if (principal == null)
+        {
+            return "";
+        }
+
+        Claim claim = principal.FindFirst(ClaimTypes.NameIdentifier);
+        return claim == null ? "" : claim.Value;
+    }
 }

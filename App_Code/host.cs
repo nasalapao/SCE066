@@ -3,6 +3,9 @@ using System.Web;
 
 public class host
 {
+    private const string DevUrl = "http://localhost:60308";
+    private const string ProdUrl = "http://172.16.33.37/SCE066";
+
     public static bool IsDev
     {
         get
@@ -16,7 +19,7 @@ public class host
                 {
                     host = HttpContext.Current.Request.Url.Host;
                 }
-                return host.Contains("localhost") || host.Contains("127.0.0.1");
+                return host.Contains("localhost") || host.Contains("127.0.0.1") || host.Equals("::1");
             }
             catch
             {
@@ -60,8 +63,44 @@ public class host
     {
         get
         {
-            // ใช้ URL ตามสภาพแวดล้อม
-            return IsDev ? "http://localhost:60308" : "http://172.16.33.37/WOA";
+            try
+            {
+                if (HttpContext.Current != null &&
+                    HttpContext.Current.Request != null &&
+                    HttpContext.Current.Request.Url != null)
+                {
+                    string baseUrl = HttpContext.Current.Request.Url.GetLeftPart(System.UriPartial.Authority);
+                    string appPath = HttpContext.Current.Request.ApplicationPath;
+
+                    if (!string.IsNullOrEmpty(appPath) && appPath != "/")
+                    {
+                        baseUrl += appPath;
+                    }
+
+                    return baseUrl.TrimEnd('/');
+                }
+            }
+            catch
+            {
+            }
+
+            return IsDev ? DevUrl : ProdUrl;
         }
+    }
+
+    public static string BuildUrl(string relativeUrl)
+    {
+        relativeUrl = (relativeUrl ?? "").Trim();
+
+        if (relativeUrl.StartsWith("~/"))
+        {
+            relativeUrl = relativeUrl.Substring(2);
+        }
+        else if (relativeUrl.StartsWith("/"))
+        {
+            relativeUrl = relativeUrl.Substring(1);
+        }
+
+        return Url.TrimEnd('/') + "/" + relativeUrl;
     }
 }
