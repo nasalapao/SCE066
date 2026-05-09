@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Web;
 using System.Web.UI;
@@ -20,6 +21,7 @@ public partial class Site : MasterPage
         if (!Page.IsPostBack)
         {
             BindUserInfo(principal);
+            BindMenuPermissions(principal);
         }
     }
 
@@ -54,6 +56,20 @@ public partial class Site : MasterPage
         litDepartment.Text = GetClaimValue(principal, "section");
     }
 
+    private void BindMenuPermissions(ClaimsPrincipal principal)
+    {
+        string personCode = GetClaimValue(principal, ClaimTypes.NameIdentifier);
+        List<string> allowedPageCodes = PermissionManager.GetAllowedPageCodes(personCode);
+
+        liSCE066.Visible = true;
+        liCustomerEmail.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.CustomerEmail);
+        liAdminEmail.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmail);
+        liAdminEmailTemplate.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailTemplate);
+        liAdminEmailSender.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailSender);
+        liPermissionAdmin.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.PermissionAdmin);
+        liAdmin.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liPermissionAdmin.Visible;
+    }
+
     private string GetClaimValue(ClaimsPrincipal principal, string type)
     {
         Claim claim = principal.FindFirst(type);
@@ -62,7 +78,14 @@ public partial class Site : MasterPage
 
     private void RedirectToLogin()
     {
-        Response.Redirect("~/Login.aspx", false);
+        string returnUrl = Request.RawUrl;
+        string loginUrl = "~/Login.aspx";
+        if (!string.IsNullOrWhiteSpace(returnUrl))
+        {
+            loginUrl += "?ReturnUrl=" + Server.UrlEncode(returnUrl);
+        }
+
+        Response.Redirect(loginUrl, false);
         Context.ApplicationInstance.CompleteRequest();
     }
 }

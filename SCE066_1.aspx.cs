@@ -201,6 +201,9 @@ public partial class SCE066_1 : System.Web.UI.Page
                 int rowIndex = Convert.ToInt32(e.CommandArgument);
                 string revi = ((Label)GridView1.Rows[rowIndex].FindControl("lblREVI")).Text.Trim();
                 string filePath = ((Label)GridView1.Rows[rowIndex].FindControl("lblNAME")).Text.Trim();
+                string invoiceNo = txtIVNO.Text.Trim();
+                string docType = ddlDATU.Text.Trim();
+                string customerCode = CUNO.Value;
 
                 if (PASSW.Value.Equals("AUDIT"))
                 {
@@ -213,8 +216,8 @@ public partial class SCE066_1 : System.Web.UI.Page
 
                 string sql_delete = "delete from itprod.shdocl " +
                                     " where slcono = 100 and sldivi = 'PFT' " +
-                                    " and slivno = '" + txtIVNO.Text.Trim() + "'" +
-                                    " and sldatu = '" + ddlDATU.Text + "'" +
+                                    " and slivno = '" + invoiceNo + "'" +
+                                    " and sldatu = '" + docType + "'" +
                                     " and slrevi = " + revi;
 
                 iDB2Command comm_delete = new iDB2Command(sql_delete, connection);
@@ -234,6 +237,7 @@ public partial class SCE066_1 : System.Web.UI.Page
                 {
                 }
 
+                SendDocumentDeleteNotice(invoiceNo, customerCode, docType, revi, filePath);
                 ShowData();
             }
             catch (Exception ex)
@@ -862,6 +866,43 @@ public partial class SCE066_1 : System.Web.UI.Page
         {
             ShowError("ส่ง Email แจ้งงาน Invoice ไม่สำเร็จ : " + errorMessage);
         }
+    }
+
+    private void SendDocumentDeleteNotice(string invoiceNo, string customerCode, string docType, string revision, string filePath)
+    {
+        string customerName = GetCustomerName(customerCode);
+        string sentUser = GetCurrentPersonCode();
+
+        EmailSender service = new EmailSender();
+        string errorMessage;
+        bool success = service.SendDeleteNotice(invoiceNo, customerCode, customerName, GetDocumentName(docType), revision, filePath, sentUser, out errorMessage);
+
+        if (!success)
+        {
+            ShowError("ส่ง Email แจ้งลบเอกสารไม่สำเร็จ : " + errorMessage);
+        }
+    }
+
+    private string GetDocumentName(string docType)
+    {
+        if (docType == "1")
+            return "Ship Doc";
+        if (docType == "2")
+            return "QA Doc";
+        if (docType == "3")
+            return "Form Doc";
+        if (docType == "4")
+            return "HC Doc";
+        if (docType == "5")
+            return "DHL Doc";
+        if (docType == "6")
+            return "P/L";
+        if (docType == "7")
+            return "Custom";
+        if (docType == "8")
+            return "Invoice";
+
+        return docType;
     }
 
     private string GetCustomerName(string customerCode)

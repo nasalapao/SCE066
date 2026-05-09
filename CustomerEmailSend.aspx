@@ -83,6 +83,19 @@
             color: #1f4e79;
         }
 
+        .file-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            border: 1px solid #c8d4df;
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: #1f4e79;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
         .message-error,
         .message-success {
             display: block;
@@ -210,6 +223,12 @@
                             <asp:BoundField DataField="SHIVNO" HeaderText="Invoice" />
                             <asp:BoundField DataField="CUSTOMER_DISPLAY" HeaderText="Customer" />
                             <asp:BoundField DataField="INVOICE_UPLOAD_DATE" HeaderText="INV Upload Date" />
+                            <asp:TemplateField HeaderText="File">
+                                <ItemTemplate>
+                                    <asp:HyperLink ID="lnkViewFile" runat="server" Text="View" CssClass="file-link"
+                                        NavigateUrl='<%# GetInvoiceFileUrl(Eval("SHIVNO")) %>' Target="_blank" />
+                                </ItemTemplate>
+                            </asp:TemplateField>
                             <asp:BoundField DataField="MAIL_STATUS_TEXT" HeaderText="Mail Status" />
                             <asp:BoundField DataField="SHMLTS" HeaderText="Last Sent" />
                             <asp:BoundField DataField="SHMLUS_DISPLAY" HeaderText="Last User" />

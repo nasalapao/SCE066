@@ -82,6 +82,13 @@
             box-shadow: 0 0 0 0.15rem rgba(31, 78, 121, 0.12);
         }
 
+        .field-hint {
+            margin-top: 6px;
+            color: var(--text-soft);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
         .login-button {
             width: 100%;
             min-height: 44px;
@@ -123,6 +130,7 @@
                 <div class="mb-4">
                     <label class="field-label" for="<%= txtPassword.ClientID %>">รหัสผ่าน</label>
                     <asp:TextBox ID="txtPassword" runat="server" CssClass="field-control" TextMode="Password" MaxLength="100" />
+                    <div class="field-hint">ใช้ Username เดียวกับระบบ HRIS</div>
                 </div>
 
                 <asp:Button ID="btnLogin" runat="server" Text="เข้าสู่ระบบ" CssClass="login-button" OnClick="btnLogin_Click" />

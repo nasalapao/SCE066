@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Mail;
 using System.Text;
 using System.Data;              // เผื่อมีการคืนค่า DataTable
+using System.IO;
                                 // ไม่ต้อง using IBM.Data.DB2.iSeries อีก
 
 public class EmailSender
@@ -11,42 +13,64 @@ public class EmailSender
     private const string TestCcEmail = "nasalapao@gmail.com";
 
     /* ---------- 1. SMTP CONFIG ---------- */
-    private readonly string smtpHost = "172.16.1.51";
-    private readonly int smtpPort = 25;
-    private readonly string fromEmail = "woa-system@it.patayafood.com";
-    private readonly string fromPwd = "";          // ถ้าไม่ใช้ AUTH ปล่อยว่างได้
+    private readonly string smtpHost = "smtp.office365.com";
+    private readonly int smtpPort = 587;
+    private readonly bool smtpEnableSsl = true;
+    private readonly string smtpTargetName = "STARTTLS/smtp.office365.com";
+    private readonly string legacySmtpHost = "172.16.1.51";
+    private readonly int legacySmtpPort = 25;
+    private readonly string legacyFromEmail = "SCE066@it.patayafood.com";
 
     /* ---------- 2. FOOTER ---------- */
     private readonly string footer =
         "<hr style=\"border:0;border-top:1px dashed #bbb\" />" +
         "<small style=\"color:#666\">This e-mail was sent automatically by Customer Email Send</small>";
 
-    private bool Send(string fromAddress, string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
+    private bool Send(string senderCode, string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
+    {
+        return Send(senderCode, toCsv, ccCsv, subject, bodyHtml, null, out errorMessage);
+    }
+
+    private bool Send(string senderCode, string toCsv, string ccCsv, string subject, string bodyHtml, List<string> attachmentPaths, out string errorMessage)
     {
         errorMessage = "";
 
         try
         {
-            if (string.IsNullOrWhiteSpace(fromAddress))
+            if (string.IsNullOrWhiteSpace(senderCode))
             {
-                throw new InvalidOperationException("Sender email is empty");
+                throw new InvalidOperationException("Sender code is empty");
             }
+
+            SenderConfig senderConfig = GetActiveSenderConfig(senderCode, out errorMessage);
+            if (senderConfig == null)
+            {
+                return false;
+            }
+
+            ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)3072;
 
             using (var smtp = new SmtpClient(smtpHost, smtpPort))
             {
-                // ตั้งค่า SMTP credentials ถ้ามี
-                if (!string.IsNullOrEmpty(fromPwd))
-                    smtp.Credentials = new System.Net.NetworkCredential(fromEmail, fromPwd);
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new NetworkCredential(senderConfig.SenderEmail, senderConfig.AppPassword);
+                smtp.EnableSsl = smtpEnableSsl;
+
+                if (!string.IsNullOrWhiteSpace(smtpTargetName))
+                {
+                    smtp.TargetName = smtpTargetName;
+                }
 
                 // สร้าง MailMessage
                 using (var msg = new MailMessage())
                 {
-                    msg.From = new MailAddress(fromAddress.Trim());
+                    msg.From = new MailAddress(senderConfig.SenderEmail);
                     msg.Subject = subject ?? "";
                     msg.Body = BuildHtmlMessage(bodyHtml);
                     msg.IsBodyHtml = true;
                     msg.BodyEncoding = Encoding.UTF8;
                     msg.SubjectEncoding = Encoding.UTF8;
+                    AddAttachments(msg, attachmentPaths);
 
                     // ✅ ถ้าเป็น dev → ส่งให้เฉพาะ test
                     if (host.IsDev)
@@ -59,7 +83,7 @@ public class EmailSender
                         // Production: ส่งให้ผู้รับจริง
                         AddRecipients(msg.To, toCsv);
                         AddRecipients(msg.CC, ccCsv);
-                        AddRecipientIfMissing(msg.CC, TestCcEmail);
+                        
 
                         // ✅ BCC หาตัวเองทุกฉบับ (production เท่านั้น)
                         msg.Bcc.Add("siripong.j@patayafood.com");
@@ -80,9 +104,9 @@ public class EmailSender
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            errorMessage = BuildExceptionMessage(ex);
 
-            System.Diagnostics.Debug.WriteLine(string.Format("Email send failed: {0}", ex.Message));
+            System.Diagnostics.Debug.WriteLine(string.Format("Email send failed: {0}", errorMessage));
             return false;
         }
     }
@@ -122,6 +146,22 @@ public class EmailSender
         collection.Add(normalizedEmail);
     }
 
+    private void AddAttachments(MailMessage message, List<string> attachmentPaths)
+    {
+        if (attachmentPaths == null)
+        {
+            return;
+        }
+
+        foreach (string attachmentPath in attachmentPaths)
+        {
+            if (!string.IsNullOrWhiteSpace(attachmentPath))
+            {
+                message.Attachments.Add(new Attachment(attachmentPath.Trim()));
+            }
+        }
+    }
+
     private string BuildHtmlMessage(string bodyHtml)
     {
         return "<!DOCTYPE html><html><head><meta charset=\"utf-8\" /></head>" +
@@ -131,10 +171,178 @@ public class EmailSender
                "</body></html>";
     }
 
+    private string BuildExceptionMessage(Exception ex)
+    {
+        List<string> messages = new List<string>();
+        Exception current = ex;
+        while (current != null)
+        {
+            if (!string.IsNullOrWhiteSpace(current.Message))
+            {
+                messages.Add(current.Message);
+            }
+
+            current = current.InnerException;
+        }
+
+        return string.Join(" | ", messages.ToArray());
+    }
+
+    private bool SendByLegacySmtp(string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
+    {
+        errorMessage = "";
+
+        try
+        {
+            using (var smtp = new SmtpClient(legacySmtpHost, legacySmtpPort))
+            {
+                using (var msg = new MailMessage())
+                {
+                    msg.From = new MailAddress(legacyFromEmail);
+                    msg.Subject = subject ?? "";
+                    msg.Body = BuildHtmlMessage(bodyHtml);
+                    msg.IsBodyHtml = true;
+                    msg.BodyEncoding = Encoding.UTF8;
+                    msg.SubjectEncoding = Encoding.UTF8;
+
+                    if (host.IsDev)
+                    {
+                        msg.To.Add("siripong.j@patayafood.com");
+                    }
+                    else
+                    {
+                        AddRecipients(msg.To, toCsv);
+                        AddRecipients(msg.CC, ccCsv);
+                    }
+
+                    if (msg.To.Count == 0 && msg.Bcc.Count == 0)
+                    {
+                        throw new InvalidOperationException("No recipients specified");
+                    }
+
+                    smtp.Send(msg);
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = BuildExceptionMessage(ex);
+            System.Diagnostics.Debug.WriteLine(string.Format("Legacy email send failed: {0}", errorMessage));
+            return false;
+        }
+    }
+
+    private SenderConfig GetActiveSenderConfig(string senderCode, out string errorMessage)
+    {
+        errorMessage = "";
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT SENDER_EMAIL, APP_PASSWORD
+              FROM ITPROD.SHCUMAILS
+             WHERE SENDER_CODE = @SENDER_CODE
+               AND ACTIVE_STATUS = 'Y'";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@SENDER_CODE", senderCode);
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError)
+        {
+            errorMessage = db.ErrorMessage;
+            return null;
+        }
+
+        if (dt.Rows.Count == 0)
+        {
+            errorMessage = "ไม่พบ active email sender " + senderCode;
+            return null;
+        }
+
+        string senderEmail = Convert.ToString(dt.Rows[0]["SENDER_EMAIL"]).Trim();
+        string appPassword = Convert.ToString(dt.Rows[0]["APP_PASSWORD"]).Trim();
+
+        if (string.IsNullOrWhiteSpace(senderEmail))
+        {
+            errorMessage = "SMTP sender email is empty";
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(appPassword))
+        {
+            errorMessage = "SMTP App Password is empty";
+            return null;
+        }
+
+        return new SenderConfig
+        {
+            SenderEmail = senderEmail,
+            AppPassword = appPassword
+        };
+    }
+
+    public bool SendTestEmail(string senderEmail, string appPassword, out string errorMessage)
+    {
+        errorMessage = "";
+
+        try
+        {
+            senderEmail = (senderEmail ?? "").Trim();
+            appPassword = (appPassword ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(senderEmail))
+            {
+                throw new InvalidOperationException("SMTP sender email is empty");
+            }
+
+            if (string.IsNullOrWhiteSpace(appPassword))
+            {
+                throw new InvalidOperationException("SMTP App Password is empty");
+            }
+
+            ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)3072;
+
+            using (var smtp = new SmtpClient(smtpHost, smtpPort))
+            {
+                smtp.UseDefaultCredentials = false;
+                smtp.Credentials = new NetworkCredential(senderEmail, appPassword);
+                smtp.EnableSsl = smtpEnableSsl;
+
+                if (!string.IsNullOrWhiteSpace(smtpTargetName))
+                {
+                    smtp.TargetName = smtpTargetName;
+                }
+
+                using (var msg = new MailMessage())
+                {
+                    msg.From = new MailAddress(senderEmail);
+                    msg.To.Add(senderEmail);
+                    msg.Subject = "SCE066 SMTP sender test";
+                    msg.Body = BuildHtmlMessage("<p>This is a test email from SCE066 Customer Email Sender.</p>");
+                    msg.IsBodyHtml = true;
+                    msg.BodyEncoding = Encoding.UTF8;
+                    msg.SubjectEncoding = Encoding.UTF8;
+
+                    smtp.Send(msg);
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = BuildExceptionMessage(ex);
+            System.Diagnostics.Debug.WriteLine(string.Format("Email sender test failed: {0}", errorMessage));
+            return false;
+        }
+    }
+
     public bool SendUploadNotice(string invoiceNo, string customerCode, string customerName, string manageUrl, string sentUser, out string errorMessage)
     {
         errorMessage = "";
-        string recipients = GetRecipientCsv("ALL", "NOTICE");
+        string recipients = host.IsDev ? "siripong.j@patayafood.com" : GetRecipientCsv("ALL", "NOTICE");
 
         if (string.IsNullOrWhiteSpace(recipients))
         {
@@ -149,8 +357,33 @@ public class EmailSender
                       "<b>Customer:</b> " + Encode(customerCode) + " " + Encode(customerName) + "</p>" +
                       "<p><a href=\"" + Encode(manageUrl) + "\">Open customer email management</a></p>";
 
-        bool success = Send(fromEmail, recipients, "", subject, body, out errorMessage);
+        bool success = SendByLegacySmtp(recipients, "", subject, body, out errorMessage);
         WriteSceLog("NOTICE", invoiceNo, customerCode, recipients, "", subject, body, success ? "SUCCESS" : "FAILED", errorMessage, sentUser);
+        return success;
+    }
+
+    public bool SendDeleteNotice(string invoiceNo, string customerCode, string customerName, string docType, string revision, string filePath, string sentUser, out string errorMessage)
+    {
+        errorMessage = "";
+        string recipients = host.IsDev ? "siripong.j@patayafood.com" : GetRecipientCsv("ALL", "NOTICE");
+
+        if (string.IsNullOrWhiteSpace(recipients))
+        {
+            errorMessage = "ไม่พบ Email NOTICE สำหรับ CUSTOMER_CODE = ALL";
+            WriteSceLog("NOTICE_DELETE", invoiceNo, customerCode, "", "", "FAILED", errorMessage, sentUser);
+            return false;
+        }
+
+        string subject = "Invoice document deleted: " + invoiceNo;
+        string body = "<p>Invoice document has been deleted.</p>" +
+                      "<p><b>Invoice No:</b> " + Encode(invoiceNo) + "<br />" +
+                      "<b>Customer:</b> " + Encode(customerCode) + " " + Encode(customerName) + "<br />" +
+                      "<b>Doc Type:</b> " + Encode(docType) + "<br />" +
+                      "<b>Revision:</b> " + Encode(revision) + "<br />" +
+                      "<b>File:</b> " + Encode(filePath) + "</p>";
+
+        bool success = SendByLegacySmtp(recipients, "", subject, body, out errorMessage);
+        WriteSceLog("NOTICE_DELETE", invoiceNo, customerCode, recipients, "", subject, body, success ? "SUCCESS" : "FAILED", errorMessage, sentUser);
         return success;
     }
 
@@ -177,8 +410,14 @@ public class EmailSender
 
         string subject = ApplyTemplateText(template.Subject, invoiceNo, customerCode, customerName);
         string body = ApplyTemplateBody(template.Body, invoiceNo, customerCode, customerName);
+        List<string> attachmentPaths = GetInvoiceAttachmentPaths(invoiceNo, out errorMessage);
+        if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            WriteSceLog("CUSTOMER", invoiceNo, customerCode, toRecipients, ccRecipients, subject, body, "FAILED", errorMessage, sentUser);
+            return false;
+        }
 
-        bool success = Send(fromEmail, toRecipients, ccRecipients, subject, body, out errorMessage);
+        bool success = Send(CustomerInvoiceTemplateCode, toRecipients, ccRecipients, subject, body, attachmentPaths, out errorMessage);
         WriteSceLog("CUSTOMER", invoiceNo, customerCode, toRecipients, ccRecipients, subject, body, success ? "SUCCESS" : "FAILED", errorMessage, sentUser);
 
         if (success)
@@ -193,16 +432,16 @@ public class EmailSender
     {
         dbConnect db = new dbConnect();
         string sql = @"
-            SELECT EMAIL_ADDRESS
+            SELECT TRIM(EMAIL_ADDRESS) AS EMAIL_ADDRESS
               FROM ITPROD.SHCUMAILD
-             WHERE CUSTOMER_CODE = @CUSTOMER_CODE
-               AND RECIPIENT_TYPE = @RECIPIENT_TYPE
-               AND ACTIVE_STATUS = 'Y'
+             WHERE TRIM(CUSTOMER_CODE) = @CUSTOMER_CODE
+               AND TRIM(RECIPIENT_TYPE) = @RECIPIENT_TYPE
+               AND TRIM(ACTIVE_STATUS) = 'Y'
              ORDER BY EMAIL_SEQ";
 
         Dictionary<string, object> param = new Dictionary<string, object>();
-        param.Add("@CUSTOMER_CODE", customerCode);
-        param.Add("@RECIPIENT_TYPE", recipientType);
+        param.Add("@CUSTOMER_CODE", (customerCode ?? "").Trim());
+        param.Add("@RECIPIENT_TYPE", (recipientType ?? "").Trim());
 
         DataTable dt = db.ExecuteQuery(sql, param);
         if (db.isError || dt.Rows.Count == 0)
@@ -246,6 +485,71 @@ public class EmailSender
             Subject = Convert.ToString(dt.Rows[0]["SUBJECT_TEMPLATE"]),
             Body = Convert.ToString(dt.Rows[0]["BODY_TEMPLATE"])
         };
+    }
+
+    private List<string> GetInvoiceAttachmentPaths(string invoiceNo, out string errorMessage)
+    {
+        errorMessage = "";
+        List<string> attachmentPaths = new List<string>();
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT SLFNAM
+              FROM ITPROD.SHDOCL
+             WHERE SLCONO = 100
+               AND SLDIVI = 'PFT'
+               AND SLIVNO = @SLIVNO
+               AND SLDATU = '8'
+               AND SLREVI = (
+                    SELECT MAX(SLREVI)
+                      FROM ITPROD.SHDOCL
+                     WHERE SLCONO = 100
+                       AND SLDIVI = 'PFT'
+                       AND SLIVNO = @SLIVNO_MAX
+                       AND SLDATU = '8'
+               )
+             ORDER BY SLFNAM";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@SLIVNO", invoiceNo);
+        param.Add("@SLIVNO_MAX", invoiceNo);
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError)
+        {
+            errorMessage = db.ErrorMessage;
+            return attachmentPaths;
+        }
+
+        if (dt.Rows.Count == 0)
+        {
+            errorMessage = "ไม่พบไฟล์ INV สำหรับแนบ Invoice " + invoiceNo;
+            return attachmentPaths;
+        }
+
+        foreach (DataRow row in dt.Rows)
+        {
+            string filePath = Convert.ToString(row["SLFNAM"]).Trim();
+            if (string.IsNullOrEmpty(filePath))
+            {
+                continue;
+            }
+
+            if (!File.Exists(filePath))
+            {
+                errorMessage = "ไม่พบไฟล์แนบ: " + filePath;
+                return attachmentPaths;
+            }
+
+            attachmentPaths.Add(filePath);
+        }
+
+        if (attachmentPaths.Count == 0)
+        {
+            errorMessage = "ไม่พบไฟล์ INV สำหรับแนบ Invoice " + invoiceNo;
+        }
+
+        return attachmentPaths;
     }
 
     private void MarkCustomerEmailSent(string invoiceNo, string sentUser)
@@ -387,6 +691,12 @@ public class EmailSender
     {
         public string Subject { get; set; }
         public string Body { get; set; }
+    }
+
+    private class SenderConfig
+    {
+        public string SenderEmail { get; set; }
+        public string AppPassword { get; set; }
     }
 
 }

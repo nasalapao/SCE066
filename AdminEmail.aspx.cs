@@ -9,6 +9,11 @@ public partial class AdminEmail : Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!PermissionManager.RedirectIfNoPermission(this, PermissionManager.PageCodes.AdminEmail))
+        {
+            return;
+        }
+
         if (!Page.IsPostBack)
         {
             ClearMessage();

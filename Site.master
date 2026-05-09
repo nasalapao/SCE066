@@ -178,13 +178,15 @@
                 <nav aria-label="Main menu">
                     <ul class="site-menu">
                         <li><a href="<%= ResolveUrl("~/Home.aspx") %>">Home</a></li>
-                        <li><a href="<%= ResolveUrl("~/SCE066.aspx") %>">SCE066</a></li>
-                        <li><a href="<%= ResolveUrl("~/CustomerEmailSend.aspx") %>">Customer Email</a></li>
-                        <li>
+                        <li id="liSCE066" runat="server"><a href="<%= ResolveUrl("~/SCE066.aspx") %>">SCE066</a></li>
+                        <li id="liCustomerEmail" runat="server"><a href="<%= ResolveUrl("~/CustomerEmailSend.aspx") %>">Customer Email</a></li>
+                        <li id="liAdmin" runat="server">
                             <a href="#" aria-haspopup="true">Admin</a>
                             <ul class="submenu">
-                                <li><a href="<%= ResolveUrl("~/AdminEmail.aspx") %>">Email Management</a></li>
-                                <li><a href="<%= ResolveUrl("~/AdminEmailTemplate.aspx") %>">Email Template</a></li>
+                                <li id="liAdminEmail" runat="server"><a href="<%= ResolveUrl("~/AdminEmail.aspx") %>">Email Management</a></li>
+                                <li id="liAdminEmailTemplate" runat="server"><a href="<%= ResolveUrl("~/AdminEmailTemplate.aspx") %>">Email Template</a></li>
+                                <li id="liAdminEmailSender" runat="server"><a href="<%= ResolveUrl("~/AdminEmailSender.aspx") %>">Email Sender</a></li>
+                                <li id="liPermissionAdmin" runat="server"><a href="<%= ResolveUrl("~/AdminPermission.aspx") %>">Permission</a></li>
                             </ul>
                         </li>
                     </ul>

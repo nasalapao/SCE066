@@ -12,6 +12,11 @@ public partial class AdminEmailTemplate : Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!PermissionManager.RedirectIfNoPermission(this, PermissionManager.PageCodes.AdminEmailTemplate))
+        {
+            return;
+        }
+
         if (!Page.IsPostBack)
         {
             ClearMessage();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.Net;
 using System.Security.Claims;
 using System.Web;
 using System.Web.UI;
@@ -13,9 +14,20 @@ public partial class CustomerEmailSend : Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!PermissionManager.RedirectIfNoPermission(this, PermissionManager.PageCodes.CustomerEmail))
+        {
+            return;
+        }
+
         if (!Page.IsPostBack)
         {
             ClearMessage();
+            if (!string.IsNullOrWhiteSpace(Request.QueryString["VIEWINV"]))
+            {
+                OpenInvoiceFile(Request.QueryString["VIEWINV"]);
+                return;
+            }
+
             txtInvoiceNo.Text = (Request.QueryString["INVNO"] ?? "").Trim();
             SetDefaultDateRange();
             ddlStatus.SelectedValue = "PENDING";
@@ -108,6 +120,106 @@ public partial class CustomerEmailSend : Page
         {
             btnSendMail.OnClientClick = "return confirm('Invoice นี้เคยส่ง Email ลูกค้าแล้ว ต้องการส่งซ้ำใช่หรือไม่?');";
         }
+    }
+
+    protected string GetInvoiceFileUrl(object invoiceNo)
+    {
+        return "~/CustomerEmailSend.aspx?VIEWINV=" + HttpUtility.UrlEncode(Convert.ToString(invoiceNo).Trim());
+    }
+
+    private void OpenInvoiceFile(string invoiceNo)
+    {
+        invoiceNo = (invoiceNo ?? "").Trim();
+        if (string.IsNullOrEmpty(invoiceNo))
+        {
+            ShowError("ไม่พบ Invoice No สำหรับเปิดไฟล์");
+            return;
+        }
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT SLFNAM, SLFEXT
+              FROM ITPROD.SHDOCL
+             WHERE SLCONO = 100
+               AND SLDIVI = 'PFT'
+               AND SLIVNO = @SLIVNO
+               AND SLDATU = '8'
+               AND SLREVI = (
+                    SELECT MAX(SLREVI)
+                      FROM ITPROD.SHDOCL
+                     WHERE SLCONO = 100
+                       AND SLDIVI = 'PFT'
+                       AND SLIVNO = @SLIVNO_MAX
+                       AND SLDATU = '8'
+               )";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@SLIVNO", invoiceNo);
+        param.Add("@SLIVNO_MAX", invoiceNo);
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError)
+        {
+            ShowError(db.ErrorMessage);
+            return;
+        }
+
+        if (dt.Rows.Count == 0)
+        {
+            ShowError("ไม่พบไฟล์ INV สำหรับ Invoice " + invoiceNo);
+            return;
+        }
+
+        string fileLocation = Convert.ToString(dt.Rows[0]["SLFNAM"]).Trim();
+        string fileExt = Convert.ToString(dt.Rows[0]["SLFEXT"]).Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(fileLocation))
+        {
+            ShowError("ไม่พบ path ไฟล์ INV สำหรับ Invoice " + invoiceNo);
+            return;
+        }
+
+        try
+        {
+            WebClient client = new WebClient();
+            byte[] fileBuffer = client.DownloadData(fileLocation);
+            if (fileBuffer == null)
+            {
+                ShowError("ไม่สามารถอ่านไฟล์ INV สำหรับ Invoice " + invoiceNo);
+                return;
+            }
+
+            Response.Clear();
+            Response.ContentType = GetContentType(fileExt);
+            Response.AppendHeader("content-disposition", "inline; filename=Invoice" + fileExt);
+            Response.BinaryWrite(fileBuffer);
+            Response.End();
+        }
+        catch (Exception ex)
+        {
+            ShowError("เปิดไฟล์ INV ไม่สำเร็จ : " + ex.Message);
+        }
+    }
+
+    private string GetContentType(string fileExt)
+    {
+        if (fileExt == ".pdf")
+        {
+            return "application/pdf";
+        }
+        if (fileExt == ".xls")
+        {
+            return "application/vnd.ms-excel";
+        }
+        if (fileExt == ".xlsx")
+        {
+            return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        }
+        if (fileExt == ".doc" || fileExt == ".docx")
+        {
+            return "application/ms-word";
+        }
+
+        return "application/octet-stream";
     }
 
     private void BindInvoiceList()

@@ -11,7 +11,7 @@ public partial class Login : System.Web.UI.Page
     {
         if (HasValidLogin())
         {
-            Response.Redirect("~/Home.aspx", false);
+            Response.Redirect(GetSafeReturnUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
             return;
         }
@@ -74,7 +74,7 @@ public partial class Login : System.Web.UI.Page
             cookie.Expires = DateTime.Now.AddDays(2);
             Response.Cookies.Add(cookie);
 
-            Response.Redirect("~/Home.aspx", false);
+            Response.Redirect(GetSafeReturnUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
         catch (Exception ex)
@@ -105,5 +105,22 @@ public partial class Login : System.Web.UI.Page
         }
 
         return JwtHelper.ValidateToken(cookie.Value) != null;
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        string returnUrl = Request.QueryString["ReturnUrl"];
+        if (string.IsNullOrWhiteSpace(returnUrl))
+        {
+            return ResolveUrl("~/Home.aspx");
+        }
+
+        returnUrl = Server.UrlDecode(returnUrl).Trim();
+        if (returnUrl.StartsWith("~/") || (returnUrl.StartsWith("/") && !returnUrl.StartsWith("//") && !returnUrl.Contains("://")))
+        {
+            return returnUrl;
+        }
+
+        return ResolveUrl("~/Home.aspx");
     }
 }
