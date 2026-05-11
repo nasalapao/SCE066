@@ -71,7 +71,7 @@ public partial class Login : System.Web.UI.Page
             HttpCookie cookie = new HttpCookie(AuthCookieName, token);
             cookie.HttpOnly = true;
             cookie.Path = ResolveUrl("~/");
-            cookie.Expires = DateTime.Now.AddDays(2);
+            cookie.Expires = DateTime.Now.AddDays(30);
             Response.Cookies.Add(cookie);
 
             Response.Redirect(GetSafeReturnUrl(), false);
