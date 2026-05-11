@@ -143,6 +143,10 @@
                     <label class="field-label" for="<%= txtAppPassword.ClientID %>">App Password</label>
                     <asp:TextBox ID="txtAppPassword" runat="server" CssClass="field-control" MaxLength="300" />
                 </div>
+                <div class="col-12 col-md-6">
+                    <label class="field-label" for="<%= txtTestToEmail.ClientID %>">Test TO</label>
+                    <asp:TextBox ID="txtTestToEmail" runat="server" CssClass="field-control" MaxLength="150" />
+                </div>
                 <div class="col-12">
                     <asp:CheckBox ID="chkActive" runat="server" Checked="true" />
                     <label for="<%= chkActive.ClientID %>">Active</label>

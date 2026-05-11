@@ -185,7 +185,14 @@ public class EmailSender
             current = current.InnerException;
         }
 
-        return string.Join(" | ", messages.ToArray());
+        string message = string.Join(" | ", messages.ToArray());
+        if (message.IndexOf("5.7.139", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            message.IndexOf("535", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            message += " | ตรวจสอบ App Password ของบัญชี sender, การเปิด SMTP AUTH, และสถานะ MFA/App password ใน Microsoft 365";
+        }
+
+        return message;
     }
 
     private bool SendByLegacySmtp(string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
@@ -262,7 +269,7 @@ public class EmailSender
         }
 
         string senderEmail = Convert.ToString(dt.Rows[0]["SENDER_EMAIL"]).Trim();
-        string appPassword = Convert.ToString(dt.Rows[0]["APP_PASSWORD"]).Trim();
+        string appPassword = NormalizeAppPassword(Convert.ToString(dt.Rows[0]["APP_PASSWORD"]));
 
         if (string.IsNullOrWhiteSpace(senderEmail))
         {
@@ -283,14 +290,15 @@ public class EmailSender
         };
     }
 
-    public bool SendTestEmail(string senderEmail, string appPassword, out string errorMessage)
+    public bool SendTestEmail(string senderEmail, string appPassword, string testToEmail, out string errorMessage)
     {
         errorMessage = "";
 
         try
         {
             senderEmail = (senderEmail ?? "").Trim();
-            appPassword = (appPassword ?? "").Trim();
+            appPassword = NormalizeAppPassword(appPassword);
+            testToEmail = (testToEmail ?? "").Trim();
 
             if (string.IsNullOrWhiteSpace(senderEmail))
             {
@@ -300,6 +308,11 @@ public class EmailSender
             if (string.IsNullOrWhiteSpace(appPassword))
             {
                 throw new InvalidOperationException("SMTP App Password is empty");
+            }
+
+            if (string.IsNullOrWhiteSpace(testToEmail))
+            {
+                throw new InvalidOperationException("Test TO email is empty");
             }
 
             ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | (SecurityProtocolType)3072;
@@ -318,7 +331,7 @@ public class EmailSender
                 using (var msg = new MailMessage())
                 {
                     msg.From = new MailAddress(senderEmail);
-                    msg.To.Add(senderEmail);
+                    msg.To.Add(testToEmail);
                     msg.Subject = "SCE066 SMTP sender test";
                     msg.Body = BuildHtmlMessage("<p>This is a test email from SCE066 Customer Email Sender.</p>");
                     msg.IsBodyHtml = true;
@@ -337,6 +350,16 @@ public class EmailSender
             System.Diagnostics.Debug.WriteLine(string.Format("Email sender test failed: {0}", errorMessage));
             return false;
         }
+    }
+
+    private string NormalizeAppPassword(string appPassword)
+    {
+        if (string.IsNullOrWhiteSpace(appPassword))
+        {
+            return "";
+        }
+
+        return string.Join("", appPassword.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
     }
 
     public bool SendUploadNotice(string invoiceNo, string customerCode, string customerName, string manageUrl, string sentUser, out string errorMessage)

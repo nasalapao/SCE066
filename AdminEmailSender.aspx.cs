@@ -66,6 +66,7 @@ public partial class AdminEmailSender : Page
         {
             txtSenderEmail.Text = "siripong.j@patayafood.com";
             txtAppPassword.Text = "";
+            txtTestToEmail.Text = "";
             chkActive.Checked = true;
             return;
         }
@@ -78,7 +79,7 @@ public partial class AdminEmailSender : Page
     private void SaveSender()
     {
         string senderEmail = txtSenderEmail.Text.Trim();
-        string appPassword = txtAppPassword.Text.Trim();
+        string appPassword = NormalizeAppPassword(txtAppPassword.Text);
 
         if (!IsValidEmail(senderEmail))
         {
@@ -105,7 +106,8 @@ public partial class AdminEmailSender : Page
     private void TestSender()
     {
         string senderEmail = txtSenderEmail.Text.Trim();
-        string appPassword = txtAppPassword.Text.Trim();
+        string appPassword = NormalizeAppPassword(txtAppPassword.Text);
+        string testToEmail = txtTestToEmail.Text.Trim();
 
         if (!IsValidEmail(senderEmail))
         {
@@ -119,16 +121,22 @@ public partial class AdminEmailSender : Page
             return;
         }
 
+        if (!IsValidEmail(testToEmail))
+        {
+            ShowError("กรุณากรอก Test TO ให้ถูกต้อง");
+            return;
+        }
+
         string errorMessage;
         EmailSender emailSender = new EmailSender();
-        bool success = emailSender.SendTestEmail(senderEmail, appPassword, out errorMessage);
+        bool success = emailSender.SendTestEmail(senderEmail, appPassword, testToEmail, out errorMessage);
         if (!success)
         {
             ShowError("ส่ง Test Email ไม่สำเร็จ : " + errorMessage);
             return;
         }
 
-        ShowSuccess("ส่ง Test Email สำเร็จ กรุณาตรวจสอบ mailbox " + senderEmail);
+        ShowSuccess("ส่ง Test Email สำเร็จ กรุณาตรวจสอบ mailbox " + testToEmail);
     }
 
     private bool IsValidEmail(string email)
@@ -147,6 +155,16 @@ public partial class AdminEmailSender : Page
         {
             return false;
         }
+    }
+
+    private string NormalizeAppPassword(string appPassword)
+    {
+        if (string.IsNullOrWhiteSpace(appPassword))
+        {
+            return "";
+        }
+
+        return string.Join("", appPassword.Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
     }
 
     private bool SenderExists()
