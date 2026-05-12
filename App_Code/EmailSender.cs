@@ -19,7 +19,7 @@ public class EmailSender
     private readonly string smtpTargetName = "STARTTLS/smtp.office365.com";
     private readonly string legacySmtpHost = "172.16.1.51";
     private readonly int legacySmtpPort = 25;
-    private readonly string legacyFromEmail = " @it.patayafood.com";
+    private readonly string legacyFromEmail = "lg-doc@it.patayafood.com";
 
     /* ---------- 2. FOOTER ---------- */
     private readonly string footer =
@@ -122,7 +122,14 @@ public class EmailSender
         {
             if (!string.IsNullOrWhiteSpace(email))
             {
-                collection.Add(email.Trim());
+                try
+                {
+                    collection.Add(email.Trim());
+                }
+                catch (FormatException ex)
+                {
+                    throw new FormatException("Invalid e-mail address: " + email.Trim(), ex);
+                }
             }
         }
     }
@@ -371,11 +378,11 @@ public class EmailSender
     public bool SendUploadNotice(string invoiceNo, string customerCode, string customerName, string manageUrl, string sentUser, out string errorMessage)
     {
         errorMessage = "";
-        string recipients = host.IsDev ? "siripong.j@patayafood.com" : GetRecipientCsv("ALL", "NOTICE");
+        string recipients = host.IsDev ? "siripong.j@patayafood.com" : GetRecipientCsv("ALL", "CC");
 
         if (string.IsNullOrWhiteSpace(recipients))
         {
-            errorMessage = "ไม่พบ Email NOTICE สำหรับ CUSTOMER_CODE = ALL";
+            errorMessage = "ไม่พบ Email CC สำหรับ CUSTOMER_CODE = ALL";
             WriteSceLog("NOTICE", invoiceNo, customerCode, "", "", "FAILED", errorMessage, sentUser);
             return false;
         }

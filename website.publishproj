@@ -42,6 +42,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AssemblyAttributes Include="AssemblyVersion">
       <Value>$(AssemblyVersion)</Value>
     </AssemblyAttributes>
+    <ExcludeFromPackageFolders Include="packages">
+      <FromTarget>Project</FromTarget>
+    </ExcludeFromPackageFolders>
   </ItemGroup>
   <Import Project="$(_WebPublishTargetsPath)\Web\Microsoft.WebSite.Publishing.targets" />
 </Project>
