@@ -204,6 +204,11 @@ public class EmailSender
 
     private bool SendByLegacySmtp(string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
     {
+        return SendByLegacySmtp(toCsv, ccCsv, subject, bodyHtml, false, out errorMessage);
+    }
+
+    private bool SendByLegacySmtp(string toCsv, string ccCsv, string subject, string bodyHtml, bool useConfiguredRecipientsOnly, out string errorMessage)
+    {
         errorMessage = "";
 
         try
@@ -219,7 +224,7 @@ public class EmailSender
                     msg.BodyEncoding = Encoding.UTF8;
                     msg.SubjectEncoding = Encoding.UTF8;
 
-                    if (host.IsDev)
+                    if (host.IsDev && !useConfiguredRecipientsOnly)
                     {
                         msg.To.Add("siripong.j@patayafood.com");
                     }
@@ -469,6 +474,67 @@ public class EmailSender
         }
 
         return success;
+    }
+
+    public bool SendOverdueInvoiceReminder(DataTable invoices, int overdueDays, string sentUser, out string errorMessage, out int sentCount)
+    {
+        errorMessage = "";
+        sentCount = invoices == null ? 0 : invoices.Rows.Count;
+
+        if (sentCount == 0)
+        {
+            return true;
+        }
+
+        string recipients = host.IsDev ? "siripong.j@patayafood.com" : GetRecipientCsv("ALL", "CC");
+        if (string.IsNullOrWhiteSpace(recipients))
+        {
+            errorMessage = "ไม่พบ Email CC สำหรับ CUSTOMER_CODE = ALL";
+            WriteSceLog("OVERDUE_REMINDER", "MULTI", "ALL", "", "", "FAILED", errorMessage, sentUser);
+            return false;
+        }
+
+        string subject = string.Format("Invoice email overdue reminder ({0}) - {1}", sentCount, DateTime.Now.ToString("dd/MM/yyyy"));
+        string body = BuildOverdueReminderBody(invoices, overdueDays);
+        bool success = SendByLegacySmtp(recipients, "", subject, body, true, out errorMessage);
+        WriteSceLog("OVERDUE_REMINDER", "MULTI", "ALL", recipients, "", subject, body, success ? "SUCCESS" : "FAILED", errorMessage, sentUser);
+        return success;
+    }
+
+    private string BuildOverdueReminderBody(DataTable invoices, int overdueDays)
+    {
+        StringBuilder body = new StringBuilder();
+        body.Append("<p>Invoice documents are overdue for customer email sending.</p>");
+        body.Append("<p><b>Overdue Days:</b> " + overdueDays.ToString() + "<br />");
+        body.Append("<b>Total:</b> " + invoices.Rows.Count.ToString() + "</p>");
+        body.Append("<table style=\"border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:13px;\">");
+        body.Append("<thead><tr>");
+        body.Append("<th style=\"border:1px solid #ccc;padding:6px;text-align:left;background:#f3f6fa;\">Invoice</th>");
+        body.Append("<th style=\"border:1px solid #ccc;padding:6px;text-align:left;background:#f3f6fa;\">Customer</th>");
+        body.Append("<th style=\"border:1px solid #ccc;padding:6px;text-align:left;background:#f3f6fa;\">INV Upload Date</th>");
+        body.Append("<th style=\"border:1px solid #ccc;padding:6px;text-align:right;background:#f3f6fa;\">Overdue Days</th>");
+        body.Append("<th style=\"border:1px solid #ccc;padding:6px;text-align:left;background:#f3f6fa;\">Link</th>");
+        body.Append("</tr></thead><tbody>");
+
+        foreach (DataRow row in invoices.Rows)
+        {
+            string invoiceNo = Convert.ToString(row["SHIVNO"]).Trim();
+            string customer = Convert.ToString(row["CUSTOMER_DISPLAY"]).Trim();
+            string uploadDate = Convert.ToString(row["INVOICE_UPLOAD_DATE_DISPLAY"]).Trim();
+            string days = Convert.ToString(row["OVERDUE_DAYS"]).Trim();
+            string manageUrl = Convert.ToString(row["MANAGE_URL"]).Trim();
+
+            body.Append("<tr>");
+            body.Append("<td style=\"border:1px solid #ccc;padding:6px;\">" + Encode(invoiceNo) + "</td>");
+            body.Append("<td style=\"border:1px solid #ccc;padding:6px;\">" + Encode(customer) + "</td>");
+            body.Append("<td style=\"border:1px solid #ccc;padding:6px;\">" + Encode(uploadDate) + "</td>");
+            body.Append("<td style=\"border:1px solid #ccc;padding:6px;text-align:right;\">" + Encode(days) + "</td>");
+            body.Append("<td style=\"border:1px solid #ccc;padding:6px;\"><a href=\"" + Encode(manageUrl) + "\">Open</a></td>");
+            body.Append("</tr>");
+        }
+
+        body.Append("</tbody></table>");
+        return body.ToString();
     }
 
     private SenderConfig GetCustomerInvoiceSender(string customerCode, out string errorMessage)

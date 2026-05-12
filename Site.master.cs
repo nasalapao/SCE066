@@ -74,7 +74,8 @@ public partial class Site : MasterPage
         liAdminEmailTemplate.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailTemplate);
         liAdminEmailSender.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailSender);
         liPermissionAdmin.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.PermissionAdmin);
-        liAdmin.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liPermissionAdmin.Visible;
+        liInvoiceAutoReminder.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liPermissionAdmin.Visible;
+        liAdmin.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liPermissionAdmin.Visible || liInvoiceAutoReminder.Visible;
     }
 
     private void BindPublicPage()
@@ -83,6 +84,7 @@ public partial class Site : MasterPage
         liSCE066.Visible = true;
         liLogin.Visible = true;
         liCustomerEmail.Visible = false;
+        liInvoiceAutoReminder.Visible = false;
         liAdminEmail.Visible = false;
         liAdminEmailTemplate.Visible = false;
         liAdminEmailSender.Visible = false;
@@ -93,7 +95,8 @@ public partial class Site : MasterPage
     private bool IsPublicPage()
     {
         string pageName = System.IO.Path.GetFileName(Request.AppRelativeCurrentExecutionFilePath);
-        return string.Equals(pageName, "SCE066.aspx", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(pageName, "SCE066.aspx", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(pageName, "InvoiceAutoReminder.aspx", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetClaimValue(ClaimsPrincipal principal, string type)

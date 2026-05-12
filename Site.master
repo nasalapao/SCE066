@@ -188,6 +188,7 @@
                                 <li id="liAdminEmailTemplate" runat="server"><a href="<%= ResolveUrl("~/AdminEmailTemplate.aspx") %>">Email Template</a></li>
                                 <li id="liAdminEmailSender" runat="server"><a href="<%= ResolveUrl("~/AdminEmailSender.aspx") %>">Email Sender</a></li>
                                 <li id="liPermissionAdmin" runat="server"><a href="<%= ResolveUrl("~/AdminPermission.aspx") %>">Permission</a></li>
+                                <li id="liInvoiceAutoReminder" runat="server"><a href="<%= ResolveUrl("~/InvoiceAutoReminder.aspx") %>">Invoice Reminder</a></li>
                             </ul>
                         </li>
                     </ul>
