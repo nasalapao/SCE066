@@ -3012,7 +3012,7 @@ mid(Parameters!ToDate.Value,7,2) &amp; "/" &amp; mid(Parameters!ToDate.Value,5,2
             <Paragraph>
               <TextRuns>
                 <TextRun>
-                  <Value>SCE066</Value>
+                  <Value> </Value>
                   <Style>
                     <FontSize>9pt</FontSize>
                   </Style>
@@ -3158,7 +3158,7 @@ mid(Parameters!ToDate.Value,7,2) &amp; "/" &amp; mid(Parameters!ToDate.Value,5,2
       </Fields>
       <rd:DataSetInfo>
         <rd:DataSetName>DataSet_Report</rd:DataSetName>
-        <rd:SchemaPath>X:\SCE\SCE066\App_Code\DataSet_Report.xsd</rd:SchemaPath>
+        <rd:SchemaPath>X:\SCE\ \App_Code\DataSet_Report.xsd</rd:SchemaPath>
         <rd:TableName>DataTable1</rd:TableName>
         <rd:TableAdapterFillMethod>Fill</rd:TableAdapterFillMethod>
         <rd:TableAdapterGetDataMethod>GetData</rd:TableAdapterGetDataMethod>

@@ -10,6 +10,8 @@
 
 ```sql
 CREATE TABLE ITPROD.SHCUMAILD (
+    SENDER_NAME      VARCHAR(150)  NOT NULL DEFAULT '',
+    SENDER_EMAIL     VARCHAR(150)  NOT NULL DEFAULT '',
     CUSTOMER_CODE    CHAR(10)      NOT NULL,
     RECIPIENT_TYPE   CHAR(10)      NOT NULL,
     EMAIL_SEQ        INTEGER       NOT NULL,
@@ -32,6 +34,8 @@ CREATE TABLE ITPROD.SHCUMAILD (
 DROP TABLE ITPROD.SHCUMAILD;
 
 CREATE TABLE ITPROD.SHCUMAILD (
+    SENDER_NAME      VARCHAR(150)  NOT NULL DEFAULT '',
+    SENDER_EMAIL     VARCHAR(150)  NOT NULL DEFAULT '',
     CUSTOMER_CODE    CHAR(10)      NOT NULL,
     RECIPIENT_TYPE   CHAR(10)      NOT NULL,
     EMAIL_SEQ        INTEGER       NOT NULL,
@@ -50,6 +54,8 @@ CREATE TABLE ITPROD.SHCUMAILD (
 
 | Field | Type | Required | Default | Key | Description |
 |---|---:|---|---|---|---|
+| `SENDER_NAME` | `VARCHAR(150)` | Yes | `''` |  | Sender display name from AdminEmailSender |
+| `SENDER_EMAIL` | `VARCHAR(150)` | Yes | `''` |  | Sender email used to find SMTP config in `SHCUMAILS`; one customer must have only one sender |
 | `CUSTOMER_CODE` | `CHAR(10)` | Yes |  | PK, UQ | รหัสลูกค้า/ETH code เช่น `ETH0121`; ใช้ `ALL` สำหรับ CC กลางทุกฉบับ |
 | `RECIPIENT_TYPE` | `CHAR(10)` | Yes |  | PK, UQ | ประเภทผู้รับ เช่น `TO`, `CC`, `NOTICE` หรือค่าอื่นตามที่ระบบต้องใช้ |
 | `EMAIL_SEQ` | `INTEGER` | Yes |  | PK | ลำดับ email ตาม Excel |
@@ -103,5 +109,7 @@ ORDER BY RECIPIENT_TYPE DESC, CUSTOMER_CODE, EMAIL_SEQ;
 
 - ตารางนี้ไม่แก้หรือแทนที่ `ITPROD.SHCUMAIL` เดิม
 - ใช้สำหรับ email invoice ตามไฟล์ Excel
+- ต้อง backfill `SENDER_NAME` และ `SENDER_EMAIL` ให้ข้อมูลเดิมก่อนใช้งานส่ง invoice
+- กฎของหน้า Admin คือ 1 `CUSTOMER_CODE` มีได้เพียง 1 `SENDER_EMAIL`; ถ้าเปลี่ยน sender ต้อง update ทุก email ของ customer นั้นพร้อมกัน
 - ใช้ `RECIPIENT_TYPE = 'NOTICE'` กับ `CUSTOMER_CODE = 'ALL'` สำหรับผู้รับเมลแจ้งงานภายในหลัง upload INV Doc
 - หน้า Admin สามารถใช้ `ACTIVE_STATUS` เพื่อปิด email โดยไม่ต้องลบข้อมูล

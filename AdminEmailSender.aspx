@@ -121,6 +121,41 @@
             gap: 12px;
             font-size: 0.88rem;
         }
+
+        .grid-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .sender-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+        }
+
+        .sender-grid th {
+            background: #f3f6fa;
+            color: #1f2933;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sender-grid th,
+        .sender-grid td {
+            border: 1px solid #e1e8f0;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .btn-danger-soft {
+            min-height: 40px;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-weight: 700;
+            border: 1px solid #f1c0c0;
+            background: #fff7f7;
+            color: #a61b1b;
+        }
     </style>
 </asp:Content>
 
@@ -132,14 +167,41 @@
             <asp:Label ID="lbError" runat="server" CssClass="message-error" Visible="false" />
             <asp:Label ID="lbSuccess" runat="server" CssClass="message-success" Visible="false" />
 
-            <asp:HiddenField ID="hdSenderCode" runat="server" Value="CUSTOMER_INVOICE" />
-
             <div class="row g-3">
                 <div class="col-12 col-md-6">
+                    <label class="field-label" for="<%= txtSearchSender.ClientID %>">Sender Name / Email</label>
+                    <asp:TextBox ID="txtSearchSender" runat="server" CssClass="field-control" MaxLength="150" />
+                </div>
+                <div class="col-12 col-md-2">
+                    <label class="field-label">&nbsp;</label>
+                    <div>
+                        <asp:CheckBox ID="chkShowInactive" runat="server" />
+                        <label for="<%= chkShowInactive.ClientID %>">Show inactive</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="field-label">&nbsp;</label>
+                    <div class="action-row" style="margin-top:0;">
+                        <asp:Button ID="btnSearch" runat="server" Text="Search" CssClass="btn-main" OnClick="btnSearch_Click" />
+                        <asp:Button ID="btnResetSearch" runat="server" Text="Reset" CssClass="btn-soft" OnClick="btnResetSearch_Click" CausesValidation="false" />
+                    </div>
+                </div>
+            </div>
+
+            <asp:Panel ID="pnlForm" runat="server" CssClass="sender-section">
+                <asp:HiddenField ID="hdMode" runat="server" />
+                <asp:HiddenField ID="hdSenderEmail" runat="server" />
+
+                <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="field-label" for="<%= txtSenderName.ClientID %>">Sender Name</label>
+                    <asp:TextBox ID="txtSenderName" runat="server" CssClass="field-control" MaxLength="150" />
+                </div>
+                <div class="col-12 col-md-4">
                     <label class="field-label" for="<%= txtSenderEmail.ClientID %>">Sender Email</label>
                     <asp:TextBox ID="txtSenderEmail" runat="server" CssClass="field-control" MaxLength="150" />
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-4">
                     <label class="field-label" for="<%= txtAppPassword.ClientID %>">App Password</label>
                     <asp:TextBox ID="txtAppPassword" runat="server" CssClass="field-control" MaxLength="300" />
                 </div>
@@ -152,6 +214,14 @@
                     <label for="<%= chkActive.ClientID %>">Active</label>
                 </div>
             </div>
+
+                <div class="action-row">
+                    <asp:Button ID="btnAdd" runat="server" Text="Add Sender" CssClass="btn-main" OnClick="btnAdd_Click" />
+                    <asp:Button ID="btnUpdate" runat="server" Text="Update Sender" CssClass="btn-main" OnClick="btnUpdate_Click" />
+                    <asp:Button ID="btnTest" runat="server" Text="Test Send" CssClass="btn-soft" OnClick="btnTest_Click" CausesValidation="false" />
+                    <asp:Button ID="btnClear" runat="server" Text="Clear" CssClass="btn-soft" OnClick="btnClear_Click" CausesValidation="false" />
+                </div>
+            </asp:Panel>
 
             <div class="sender-section">
                 <h2 class="sender-title">SMTP Settings</h2>
@@ -188,10 +258,32 @@
                 </div>
             </div>
 
-            <div class="action-row">
-                <asp:Button ID="btnSave" runat="server" Text="Save Sender" CssClass="btn-main" OnClick="btnSave_Click" />
-                <asp:Button ID="btnTest" runat="server" Text="Test Send" CssClass="btn-soft" OnClick="btnTest_Click" CausesValidation="false" />
-                <asp:Button ID="btnReload" runat="server" Text="Reload" CssClass="btn-soft" OnClick="btnReload_Click" CausesValidation="false" />
+            <div class="sender-section">
+                <div class="grid-wrap">
+                    <asp:GridView ID="gvSender" runat="server"
+                        AutoGenerateColumns="false"
+                        CssClass="sender-grid"
+                        DataKeyNames="SENDER_EMAIL,SENDER_NAME,ACTIVE_STATUS"
+                        EmptyDataText="No sender data"
+                        OnRowCommand="gvSender_RowCommand">
+                        <Columns>
+                            <asp:BoundField DataField="SENDER_NAME" HeaderText="Sender Name" />
+                            <asp:BoundField DataField="SENDER_EMAIL" HeaderText="Sender Email" />
+                            <asp:BoundField DataField="ACTIVE_STATUS" HeaderText="Active" />
+                            <asp:BoundField DataField="CREATED_DATE" HeaderText="Created" />
+                            <asp:BoundField DataField="UPDATED_DATE" HeaderText="Updated" />
+                            <asp:TemplateField HeaderText="Action">
+                                <ItemTemplate>
+                                    <asp:Button ID="btnEditRow" runat="server" Text="Edit" CssClass="btn-soft"
+                                        CommandName="EditSender" CommandArgument="<%# Container.DataItemIndex %>" CausesValidation="false" />
+                                    <asp:Button ID="btnDeleteRow" runat="server" Text="Delete" CssClass="btn-danger-soft"
+                                        CommandName="SoftDeleteSender" CommandArgument="<%# Container.DataItemIndex %>" CausesValidation="false"
+                                        OnClientClick="return confirm('Confirm deactivate this sender?');" />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                    </asp:GridView>
+                </div>
             </div>
         </section>
     </div>

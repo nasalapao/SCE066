@@ -17,6 +17,7 @@ public partial class AdminEmail : Page
         if (!Page.IsPostBack)
         {
             ClearMessage();
+            BindSenderDropDown();
             ClearForm();
             BindEmailList();
         }
@@ -45,6 +46,7 @@ public partial class AdminEmail : Page
     protected void btnShowAdd_Click(object sender, EventArgs e)
     {
         ClearMessage();
+        BindSenderDropDown();
         ClearForm();
         pnlForm.Visible = true;
     }
@@ -90,12 +92,54 @@ public partial class AdminEmail : Page
         }
     }
 
+    private void BindSenderDropDown()
+    {
+        ddlSender.Items.Clear();
+        ddlSender.Items.Add(new ListItem("-- Select Sender --", ""));
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT COALESCE(SENDER_NAME, '') AS SENDER_NAME,
+                   SENDER_EMAIL
+              FROM ITPROD.SHCUMAILS
+             WHERE ACTIVE_STATUS = 'Y'
+             ORDER BY SENDER_NAME, SENDER_EMAIL";
+
+        DataTable dt = db.ExecuteQuery(sql);
+        if (db.isError)
+        {
+            ShowError(db.ErrorMessage);
+            return;
+        }
+
+        foreach (DataRow row in dt.Rows)
+        {
+            string senderName = Convert.ToString(row["SENDER_NAME"]).Trim();
+            string senderEmail = Convert.ToString(row["SENDER_EMAIL"]).Trim();
+            if (string.IsNullOrWhiteSpace(senderEmail))
+            {
+                continue;
+            }
+
+            string text = string.IsNullOrWhiteSpace(senderName)
+                ? senderEmail
+                : senderName + " <" + senderEmail + ">";
+            ddlSender.Items.Add(new ListItem(text, senderEmail));
+        }
+    }
+
     private void BindEmailList()
     {
         dbConnect db = new dbConnect();
 
         string sql = @"
-            SELECT CUSTOMER_CODE,
+            SELECT COALESCE(SENDER_NAME, '') AS SENDER_NAME,
+                   COALESCE(SENDER_EMAIL, '') AS SENDER_EMAIL,
+                   CASE
+                       WHEN COALESCE(TRIM(SENDER_NAME), '') = '' THEN COALESCE(TRIM(SENDER_EMAIL), '')
+                       ELSE TRIM(SENDER_NAME) || ' <' || TRIM(SENDER_EMAIL) || '>'
+                   END AS SENDER_DISPLAY,
+                   CUSTOMER_CODE,
                    RECIPIENT_TYPE,
                    EMAIL_SEQ,
                    EMAIL_ADDRESS,
@@ -138,9 +182,23 @@ public partial class AdminEmail : Page
         string customerCode;
         string recipientType;
         string emailAddress;
+        SenderInfo selectedSender;
 
-        if (!ValidateInput(out customerCode, out recipientType, out emailAddress))
+        if (!ValidateInput(out customerCode, out recipientType, out emailAddress, out selectedSender))
         {
+            return;
+        }
+
+        SenderInfo customerSender;
+        if (!TryGetCustomerSender(customerCode, out customerSender))
+        {
+            return;
+        }
+
+        if (customerSender.HasSender &&
+            !string.Equals(customerSender.SenderEmail, selectedSender.SenderEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            ShowError("Customer นี้มี Sender อยู่แล้ว หากต้องการเปลี่ยน Sender ให้ Edit email เดิมเพื่อ update ทั้ง Customer");
             return;
         }
 
@@ -155,11 +213,13 @@ public partial class AdminEmail : Page
         dbConnect db = new dbConnect();
         string sql = @"
             INSERT INTO ITPROD.SHCUMAILD
-                (CUSTOMER_CODE, RECIPIENT_TYPE, EMAIL_SEQ, EMAIL_ADDRESS, ACTIVE_STATUS, CREATED_DATE)
+                (SENDER_NAME, SENDER_EMAIL, CUSTOMER_CODE, RECIPIENT_TYPE, EMAIL_SEQ, EMAIL_ADDRESS, ACTIVE_STATUS, CREATED_DATE)
             VALUES
-                (@CUSTOMER_CODE, @RECIPIENT_TYPE, @EMAIL_SEQ, @EMAIL_ADDRESS, @ACTIVE_STATUS, CURRENT_TIMESTAMP)";
+                (@SENDER_NAME, @SENDER_EMAIL, @CUSTOMER_CODE, @RECIPIENT_TYPE, @EMAIL_SEQ, @EMAIL_ADDRESS, @ACTIVE_STATUS, CURRENT_TIMESTAMP)";
 
         Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@SENDER_NAME", selectedSender.SenderName);
+        param.Add("@SENDER_EMAIL", selectedSender.SenderEmail);
         param.Add("@CUSTOMER_CODE", customerCode);
         param.Add("@RECIPIENT_TYPE", recipientType);
         param.Add("@EMAIL_SEQ", emailSeq);
@@ -172,6 +232,11 @@ public partial class AdminEmail : Page
         {
             ShowError(db.ErrorMessage);
             return;
+        }
+
+        if (!customerSender.HasSender)
+        {
+            UpdateCustomerSender(customerCode, selectedSender);
         }
 
         ShowSuccess("เพิ่ม Email สำเร็จ");
@@ -191,8 +256,9 @@ public partial class AdminEmail : Page
         string customerCode;
         string recipientType;
         string emailAddress;
+        SenderInfo selectedSender;
 
-        if (!ValidateInput(out customerCode, out recipientType, out emailAddress))
+        if (!ValidateInput(out customerCode, out recipientType, out emailAddress, out selectedSender))
         {
             return;
         }
@@ -203,7 +269,7 @@ public partial class AdminEmail : Page
 
         if (customerCode != oldCustomerCode || recipientType != oldRecipientType)
         {
-            ShowError("ไม่สามารถแก้ Customer Code หรือ Recipient Type ของรายการเดิมได้ กรุณาปิดรายการเดิมแล้วเพิ่มใหม่");
+            ShowError("ไม่สามารถแก้ Customer Code หรือ Recipient Type ของรายการเดิมได้");
             return;
         }
 
@@ -244,9 +310,42 @@ public partial class AdminEmail : Page
             return;
         }
 
+        if (!string.Equals(hdSenderEmail.Value.Trim(), selectedSender.SenderEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!UpdateCustomerSender(customerCode, selectedSender))
+            {
+                return;
+            }
+        }
+
         ShowSuccess("แก้ไข Email สำเร็จ");
         ClearForm();
         BindEmailList();
+    }
+
+    private bool UpdateCustomerSender(string customerCode, SenderInfo sender)
+    {
+        dbConnect db = new dbConnect();
+        string sql = @"
+            UPDATE ITPROD.SHCUMAILD
+               SET SENDER_NAME = @SENDER_NAME,
+                   SENDER_EMAIL = @SENDER_EMAIL,
+                   UPDATED_DATE = CURRENT_TIMESTAMP
+             WHERE CUSTOMER_CODE = @CUSTOMER_CODE";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@SENDER_NAME", sender.SenderName);
+        param.Add("@SENDER_EMAIL", sender.SenderEmail);
+        param.Add("@CUSTOMER_CODE", customerCode);
+
+        db.ExecuteNonQuery(sql, param);
+        if (db.isError)
+        {
+            ShowError(db.ErrorMessage);
+            return false;
+        }
+
+        return true;
     }
 
     private void SoftDeleteEmail(DataKey key)
@@ -288,15 +387,22 @@ public partial class AdminEmail : Page
         BindEmailList();
     }
 
-    private bool ValidateInput(out string customerCode, out string recipientType, out string emailAddress)
+    private bool ValidateInput(out string customerCode, out string recipientType, out string emailAddress, out SenderInfo selectedSender)
     {
         customerCode = NormalizeCustomerCode(txtCustomerCode.Text);
         recipientType = ddlRecipientType.SelectedValue.Trim().ToUpper();
         emailAddress = txtEmailAddress.Text.Trim();
+        selectedSender = GetSelectedSender();
 
         if (string.IsNullOrEmpty(customerCode))
         {
             ShowError("กรุณากรอก Customer Code");
+            return false;
+        }
+
+        if (!selectedSender.HasSender)
+        {
+            ShowError("กรุณาเลือก Sender");
             return false;
         }
 
@@ -318,6 +424,60 @@ public partial class AdminEmail : Page
             return false;
         }
 
+        return true;
+    }
+
+    private SenderInfo GetSelectedSender()
+    {
+        SenderInfo sender = new SenderInfo();
+        sender.SenderEmail = (ddlSender.SelectedValue ?? "").Trim();
+
+        ListItem item = ddlSender.SelectedItem;
+        if (item != null && !string.IsNullOrWhiteSpace(sender.SenderEmail))
+        {
+            string text = item.Text.Trim();
+            int emailStart = text.LastIndexOf(" <", StringComparison.Ordinal);
+            sender.SenderName = emailStart > 0 ? text.Substring(0, emailStart).Trim() : text;
+        }
+
+        return sender;
+    }
+
+    private bool TryGetCustomerSender(string customerCode, out SenderInfo sender)
+    {
+        sender = new SenderInfo();
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT DISTINCT COALESCE(TRIM(SENDER_NAME), '') AS SENDER_NAME,
+                            COALESCE(TRIM(SENDER_EMAIL), '') AS SENDER_EMAIL
+              FROM ITPROD.SHCUMAILD
+             WHERE CUSTOMER_CODE = @CUSTOMER_CODE
+               AND COALESCE(TRIM(SENDER_EMAIL), '') <> ''";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@CUSTOMER_CODE", customerCode);
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError)
+        {
+            ShowError(db.ErrorMessage);
+            return false;
+        }
+
+        if (dt.Rows.Count == 0)
+        {
+            return true;
+        }
+
+        if (dt.Rows.Count > 1)
+        {
+            ShowError("Customer นี้มี Sender มากกว่า 1 คน กรุณาแก้ข้อมูลให้เหลือ Sender เดียว");
+            return false;
+        }
+
+        sender.SenderName = Convert.ToString(dt.Rows[0]["SENDER_NAME"]).Trim();
+        sender.SenderEmail = Convert.ToString(dt.Rows[0]["SENDER_EMAIL"]).Trim();
         return true;
     }
 
@@ -392,13 +552,19 @@ public partial class AdminEmail : Page
         string customerCode = Convert.ToString(key.Values["CUSTOMER_CODE"]).Trim();
         string recipientType = Convert.ToString(key.Values["RECIPIENT_TYPE"]).Trim();
         string emailSeq = Convert.ToString(key.Values["EMAIL_SEQ"]).Trim();
+        string senderEmail = Convert.ToString(key.Values["SENDER_EMAIL"]).Trim();
+
+        BindSenderDropDown();
+        EnsureSenderListItem(Convert.ToString(key.Values["SENDER_NAME"]).Trim(), senderEmail);
 
         hdMode.Value = "EDIT";
         hdCustomerCode.Value = customerCode;
         hdRecipientType.Value = recipientType;
         hdEmailSeq.Value = emailSeq;
+        hdSenderEmail.Value = senderEmail;
 
         txtCustomerCode.Text = customerCode;
+        ddlSender.SelectedValue = senderEmail;
         ddlRecipientType.SelectedValue = recipientType;
         txtEmailAddress.Text = Convert.ToString(key.Values["EMAIL_ADDRESS"]).Trim();
         chkActive.Checked = Convert.ToString(key.Values["ACTIVE_STATUS"]).Trim() == "Y";
@@ -410,6 +576,24 @@ public partial class AdminEmail : Page
         pnlForm.Visible = true;
     }
 
+    private void EnsureSenderListItem(string senderName, string senderEmail)
+    {
+        if (string.IsNullOrWhiteSpace(senderEmail))
+        {
+            return;
+        }
+
+        if (ddlSender.Items.FindByValue(senderEmail) != null)
+        {
+            return;
+        }
+
+        string text = string.IsNullOrWhiteSpace(senderName)
+            ? senderEmail
+            : senderName + " <" + senderEmail + ">";
+        ddlSender.Items.Add(new ListItem(text, senderEmail));
+    }
+
     private void ClearForm()
     {
         pnlForm.Visible = false;
@@ -417,8 +601,13 @@ public partial class AdminEmail : Page
         hdCustomerCode.Value = "";
         hdRecipientType.Value = "";
         hdEmailSeq.Value = "";
+        hdSenderEmail.Value = "";
 
         txtCustomerCode.Text = "";
+        if (ddlSender.Items.Count > 0)
+        {
+            ddlSender.SelectedIndex = 0;
+        }
         ddlRecipientType.SelectedValue = "TO";
         txtEmailAddress.Text = "";
         chkActive.Checked = true;
@@ -469,5 +658,16 @@ public partial class AdminEmail : Page
         lbSuccess.Visible = true;
         lbError.Text = "";
         lbError.Visible = false;
+    }
+
+    private class SenderInfo
+    {
+        public string SenderName { get; set; }
+        public string SenderEmail { get; set; }
+
+        public bool HasSender
+        {
+            get { return !string.IsNullOrWhiteSpace(SenderEmail); }
+        }
     }
 }

@@ -1,4 +1,4 @@
--- SHDOCPERM - SCE066 permission workflow
+-- SHDOCPERM -   permission workflow
 -- Run manually on DB2 AS400 after backup/review.
 
 CREATE TABLE ITPROD.SHDOCPERM (

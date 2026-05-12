@@ -179,6 +179,7 @@
                     <ul class="site-menu">
                         <li><a href="<%= ResolveUrl("~/Home.aspx") %>">Home</a></li>
                         <li id="liSCE066" runat="server"><a href="<%= ResolveUrl("~/SCE066.aspx") %>">SCE066</a></li>
+                        <li id="liLogin" runat="server"><a href="<%= ResolveUrl("~/Login.aspx") %>">Login</a></li>
                         <li id="liCustomerEmail" runat="server"><a href="<%= ResolveUrl("~/CustomerEmailSend.aspx") %>">Customer Email</a></li>
                         <li id="liAdmin" runat="server">
                             <a href="#" aria-haspopup="true">Admin</a>
@@ -192,7 +193,7 @@
                     </ul>
                 </nav>
 
-                <div class="user-panel">
+                <div id="pnlUser" runat="server" class="user-panel">
                     <div class="user-text">
                         <strong><asp:Literal ID="litFullName" runat="server" /></strong>
                         <span><asp:Literal ID="litPersonCode" runat="server" /></span>

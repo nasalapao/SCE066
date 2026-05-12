@@ -1,11 +1,11 @@
 ---
-name: sce066-aspnet-webforms-rules
-description: Use this skill for SCE066 ASP.NET Web Forms work, including .aspx UI edits, C# code-behind changes, DB2 or SQL Server related code, Thai text or encoding changes, and user requests to git push in this repository.
+name:  -aspnet-webforms-rules
+description: Use this skill for   ASP.NET Web Forms work, including .aspx UI edits, C# code-behind changes, DB2 or SQL Server related code, Thai text or encoding changes, and user requests to git push in this repository.
 ---
 
-# SCE066 ASP.NET Web Forms Rules
+#   ASP.NET Web Forms Rules
 
-Use this skill when working in the `SCE066` project. Keep changes scoped, preserve the existing Web Forms style, and do not invent business logic, SQL, validation rules, table mappings, or UI behavior without supporting context.
+Use this skill when working in the ` ` project. Keep changes scoped, preserve the existing Web Forms style, and do not invent business logic, SQL, validation rules, table mappings, or UI behavior without supporting context.
 
 ## Project Stack
 

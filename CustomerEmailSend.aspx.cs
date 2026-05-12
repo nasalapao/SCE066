@@ -273,9 +273,10 @@ public partial class CustomerEmailSend : Page
             sql += @"
                AND EXISTS (
                     SELECT 1
-                      FROM ITPROD.SHCUMAILD mail
+                     FROM ITPROD.SHCUMAILD mail
                      WHERE trim(mail.CUSTOMER_CODE) = trim(shcuno)
                        AND trim(mail.RECIPIENT_TYPE) = 'TO'
+                       AND coalesce(trim(mail.SENDER_EMAIL), '') <> ''
                        AND mail.ACTIVE_STATUS = 'Y'
                )";
         }

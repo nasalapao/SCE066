@@ -56,7 +56,7 @@
         <section class="home-panel">
             <h1 class="home-title">Shipping Document Control</h1>
             <p class="home-text">เลือกเมนูเพื่อเข้าใช้งานระบบ</p>
-            <a class="home-link" href="<%= ResolveUrl("~/SCE066.aspx") %>">เปิดหน้า SCE066</a>
+            <a class="home-link" href="<%= ResolveUrl("~/ .aspx") %>">เปิดหน้า  </a>
         </section>
     </div>
 </asp:Content>

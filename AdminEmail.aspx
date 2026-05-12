@@ -149,21 +149,25 @@
             min-width: 360px;
         }
 
-        .email-grid th:nth-child(6),
+        .email-grid td:nth-child(5) {
+            min-width: 260px;
+        }
+
         .email-grid th:nth-child(7),
-        .email-grid td:nth-child(6),
-        .email-grid td:nth-child(7) {
+        .email-grid th:nth-child(8),
+        .email-grid td:nth-child(7),
+        .email-grid td:nth-child(8) {
             min-width: 150px;
         }
 
-        .email-grid th:nth-child(8),
-        .email-grid td:nth-child(8) {
+        .email-grid th:nth-child(9),
+        .email-grid td:nth-child(9) {
             min-width: 170px;
             white-space: nowrap;
         }
 
-        .email-grid td:nth-child(8) .btn-soft,
-        .email-grid td:nth-child(8) .btn-danger-soft {
+        .email-grid td:nth-child(9) .btn-soft,
+        .email-grid td:nth-child(9) .btn-danger-soft {
             display: inline-block;
             margin-right: 6px;
         }
@@ -205,6 +209,7 @@
                 <asp:HiddenField ID="hdCustomerCode" runat="server" />
                 <asp:HiddenField ID="hdRecipientType" runat="server" />
                 <asp:HiddenField ID="hdEmailSeq" runat="server" />
+                <asp:HiddenField ID="hdSenderEmail" runat="server" />
 
                 <div class="row g-3">
                     <div class="col-12 col-md-3">
@@ -219,9 +224,13 @@
                             <asp:ListItem Text="NOTICE" Value="NOTICE" />
                         </asp:DropDownList>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label class="field-label" for="<%= txtEmailAddress.ClientID %>">Email Address</label>
                         <asp:TextBox ID="txtEmailAddress" runat="server" CssClass="field-control" MaxLength="254" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="field-label" for="<%= ddlSender.ClientID %>">Sender</label>
+                        <asp:DropDownList ID="ddlSender" runat="server" CssClass="field-control" />
                     </div>
                     <div class="col-12 col-md-3">
                         <label class="field-label">&nbsp;</label>
@@ -244,7 +253,7 @@
                     <asp:GridView ID="gvEmail" runat="server"
                         AutoGenerateColumns="false"
                         CssClass="email-grid"
-                        DataKeyNames="CUSTOMER_CODE,RECIPIENT_TYPE,EMAIL_SEQ,EMAIL_ADDRESS,ACTIVE_STATUS"
+                        DataKeyNames="CUSTOMER_CODE,RECIPIENT_TYPE,EMAIL_SEQ,EMAIL_ADDRESS,ACTIVE_STATUS,SENDER_NAME,SENDER_EMAIL"
                         EmptyDataText="ไม่พบข้อมูล"
                         OnRowCommand="gvEmail_RowCommand">
                         <Columns>
@@ -252,6 +261,7 @@
                             <asp:BoundField DataField="RECIPIENT_TYPE" HeaderText="Type" />
                             <asp:BoundField DataField="EMAIL_SEQ" HeaderText="Seq" />
                             <asp:BoundField DataField="EMAIL_ADDRESS" HeaderText="Email" />
+                            <asp:BoundField DataField="SENDER_DISPLAY" HeaderText="Sender" />
                             <asp:BoundField DataField="ACTIVE_STATUS" HeaderText="Active" />
                             <asp:BoundField DataField="CREATED_DATE" HeaderText="Created" />
                             <asp:BoundField DataField="UPDATED_DATE" HeaderText="Updated" />

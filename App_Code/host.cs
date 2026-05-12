@@ -4,7 +4,7 @@ using System.Web;
 public class host
 {
     private const string DevUrl = "http://localhost:60308";
-    private const string ProdUrl = "http://172.16.33.37/SCE066";
+    private const string ProdUrl = "http://172.16.33.37/ ";
 
     public static bool IsDev
     {

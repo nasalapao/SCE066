@@ -14,6 +14,12 @@ public partial class Site : MasterPage
 
         if (principal == null)
         {
+            if (IsPublicPage())
+            {
+                BindPublicPage();
+                return;
+            }
+
             RedirectToLogin();
             return;
         }
@@ -62,12 +68,32 @@ public partial class Site : MasterPage
         List<string> allowedPageCodes = PermissionManager.GetAllowedPageCodes(personCode);
 
         liSCE066.Visible = true;
+        liLogin.Visible = false;
         liCustomerEmail.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.CustomerEmail);
         liAdminEmail.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmail);
         liAdminEmailTemplate.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailTemplate);
         liAdminEmailSender.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailSender);
         liPermissionAdmin.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.PermissionAdmin);
         liAdmin.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liPermissionAdmin.Visible;
+    }
+
+    private void BindPublicPage()
+    {
+        pnlUser.Visible = false;
+        liSCE066.Visible = true;
+        liLogin.Visible = true;
+        liCustomerEmail.Visible = false;
+        liAdminEmail.Visible = false;
+        liAdminEmailTemplate.Visible = false;
+        liAdminEmailSender.Visible = false;
+        liPermissionAdmin.Visible = false;
+        liAdmin.Visible = false;
+    }
+
+    private bool IsPublicPage()
+    {
+        string pageName = System.IO.Path.GetFileName(Request.AppRelativeCurrentExecutionFilePath);
+        return string.Equals(pageName, "SCE066.aspx", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetClaimValue(ClaimsPrincipal principal, string type)

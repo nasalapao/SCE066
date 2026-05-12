@@ -19,30 +19,30 @@ public class EmailSender
     private readonly string smtpTargetName = "STARTTLS/smtp.office365.com";
     private readonly string legacySmtpHost = "172.16.1.51";
     private readonly int legacySmtpPort = 25;
-    private readonly string legacyFromEmail = "SCE066@it.patayafood.com";
+    private readonly string legacyFromEmail = " @it.patayafood.com";
 
     /* ---------- 2. FOOTER ---------- */
     private readonly string footer =
         "<hr style=\"border:0;border-top:1px dashed #bbb\" />" +
         "<small style=\"color:#666\">This e-mail was sent automatically by Customer Email Send</small>";
 
-    private bool Send(string senderCode, string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
+    private bool Send(string senderEmail, string toCsv, string ccCsv, string subject, string bodyHtml, out string errorMessage)
     {
-        return Send(senderCode, toCsv, ccCsv, subject, bodyHtml, null, out errorMessage);
+        return Send(senderEmail, toCsv, ccCsv, subject, bodyHtml, null, out errorMessage);
     }
 
-    private bool Send(string senderCode, string toCsv, string ccCsv, string subject, string bodyHtml, List<string> attachmentPaths, out string errorMessage)
+    private bool Send(string senderEmail, string toCsv, string ccCsv, string subject, string bodyHtml, List<string> attachmentPaths, out string errorMessage)
     {
         errorMessage = "";
 
         try
         {
-            if (string.IsNullOrWhiteSpace(senderCode))
+            if (string.IsNullOrWhiteSpace(senderEmail))
             {
-                throw new InvalidOperationException("Sender code is empty");
+                throw new InvalidOperationException("Sender email is empty");
             }
 
-            SenderConfig senderConfig = GetActiveSenderConfig(senderCode, out errorMessage);
+            SenderConfig senderConfig = GetActiveSenderConfig(senderEmail, out errorMessage);
             if (senderConfig == null)
             {
                 return false;
@@ -241,7 +241,7 @@ public class EmailSender
         }
     }
 
-    private SenderConfig GetActiveSenderConfig(string senderCode, out string errorMessage)
+    private SenderConfig GetActiveSenderConfig(string senderEmailValue, out string errorMessage)
     {
         errorMessage = "";
 
@@ -249,11 +249,11 @@ public class EmailSender
         string sql = @"
             SELECT SENDER_EMAIL, APP_PASSWORD
               FROM ITPROD.SHCUMAILS
-             WHERE SENDER_CODE = @SENDER_CODE
+             WHERE TRIM(SENDER_EMAIL) = @SENDER_EMAIL
                AND ACTIVE_STATUS = 'Y'";
 
         Dictionary<string, object> param = new Dictionary<string, object>();
-        param.Add("@SENDER_CODE", senderCode);
+        param.Add("@SENDER_EMAIL", (senderEmailValue ?? "").Trim());
 
         DataTable dt = db.ExecuteQuery(sql, param);
         if (db.isError)
@@ -264,7 +264,13 @@ public class EmailSender
 
         if (dt.Rows.Count == 0)
         {
-            errorMessage = "ไม่พบ active email sender " + senderCode;
+            errorMessage = "ไม่พบ active email sender " + senderEmailValue;
+            return null;
+        }
+
+        if (dt.Rows.Count > 1)
+        {
+            errorMessage = "พบ active email sender ซ้ำกัน " + senderEmailValue;
             return null;
         }
 
@@ -332,8 +338,8 @@ public class EmailSender
                 {
                     msg.From = new MailAddress(senderEmail);
                     msg.To.Add(testToEmail);
-                    msg.Subject = "SCE066 SMTP sender test";
-                    msg.Body = BuildHtmlMessage("<p>This is a test email from SCE066 Customer Email Sender.</p>");
+                    msg.Subject = "  SMTP sender test";
+                    msg.Body = BuildHtmlMessage("<p>This is a test email from   Customer Email Sender.</p>");
                     msg.IsBodyHtml = true;
                     msg.BodyEncoding = Encoding.UTF8;
                     msg.SubjectEncoding = Encoding.UTF8;
@@ -413,8 +419,15 @@ public class EmailSender
     public bool SendCustomerInvoice(string invoiceNo, string customerCode, string customerName, string sentUser, out string errorMessage)
     {
         errorMessage = "";
-        string toRecipients = GetRecipientCsv(customerCode, "TO");
-        string ccRecipients = GetRecipientCsv("ALL", "CC");
+        SenderConfig customerSender = GetCustomerInvoiceSender(customerCode, out errorMessage);
+        if (customerSender == null)
+        {
+            WriteSceLog("CUSTOMER", invoiceNo, customerCode, "", "", "FAILED", errorMessage, sentUser);
+            return false;
+        }
+
+        string toRecipients = GetRecipientCsv(customerCode, "TO", customerSender.SenderEmail);
+        string ccRecipients = GetRecipientCsv("ALL", "CC", customerSender.SenderEmail);
 
         if (string.IsNullOrWhiteSpace(toRecipients))
         {
@@ -440,7 +453,7 @@ public class EmailSender
             return false;
         }
 
-        bool success = Send(CustomerInvoiceTemplateCode, toRecipients, ccRecipients, subject, body, attachmentPaths, out errorMessage);
+        bool success = Send(customerSender.SenderEmail, toRecipients, ccRecipients, subject, body, attachmentPaths, out errorMessage);
         WriteSceLog("CUSTOMER", invoiceNo, customerCode, toRecipients, ccRecipients, subject, body, success ? "SUCCESS" : "FAILED", errorMessage, sentUser);
 
         if (success)
@@ -449,6 +462,57 @@ public class EmailSender
         }
 
         return success;
+    }
+
+    private SenderConfig GetCustomerInvoiceSender(string customerCode, out string errorMessage)
+    {
+        errorMessage = "";
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT DISTINCT COALESCE(TRIM(SENDER_NAME), '') AS SENDER_NAME,
+                            COALESCE(TRIM(SENDER_EMAIL), '') AS SENDER_EMAIL
+              FROM ITPROD.SHCUMAILD
+             WHERE TRIM(CUSTOMER_CODE) = @CUSTOMER_CODE
+               AND COALESCE(TRIM(SENDER_EMAIL), '') <> ''";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@CUSTOMER_CODE", (customerCode ?? "").Trim());
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError)
+        {
+            errorMessage = db.ErrorMessage;
+            return null;
+        }
+
+        if (dt.Rows.Count == 0)
+        {
+            errorMessage = "ไม่พบ Sender สำหรับ Customer " + customerCode;
+            return null;
+        }
+
+        if (dt.Rows.Count > 1)
+        {
+            errorMessage = "Customer " + customerCode + " มี Sender มากกว่า 1 คน กรุณาแก้ไขที่ AdminEmail.aspx";
+            return null;
+        }
+
+        string senderEmail = Convert.ToString(dt.Rows[0]["SENDER_EMAIL"]).Trim();
+        if (string.IsNullOrWhiteSpace(senderEmail))
+        {
+            errorMessage = "Sender Email is empty for Customer " + customerCode;
+            return null;
+        }
+
+        SenderConfig activeSender = GetActiveSenderConfig(senderEmail, out errorMessage);
+        if (activeSender == null)
+        {
+            return null;
+        }
+
+        activeSender.SenderName = Convert.ToString(dt.Rows[0]["SENDER_NAME"]).Trim();
+        return activeSender;
     }
 
     private string GetRecipientCsv(string customerCode, string recipientType)
@@ -465,6 +529,42 @@ public class EmailSender
         Dictionary<string, object> param = new Dictionary<string, object>();
         param.Add("@CUSTOMER_CODE", (customerCode ?? "").Trim());
         param.Add("@RECIPIENT_TYPE", (recipientType ?? "").Trim());
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError || dt.Rows.Count == 0)
+        {
+            return "";
+        }
+
+        List<string> emails = new List<string>();
+        foreach (DataRow row in dt.Rows)
+        {
+            string email = Convert.ToString(row["EMAIL_ADDRESS"]).Trim();
+            if (!string.IsNullOrEmpty(email))
+            {
+                emails.Add(email);
+            }
+        }
+
+        return string.Join(";", emails.ToArray());
+    }
+
+    private string GetRecipientCsv(string customerCode, string recipientType, string senderEmail)
+    {
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT TRIM(EMAIL_ADDRESS) AS EMAIL_ADDRESS
+              FROM ITPROD.SHCUMAILD
+             WHERE TRIM(CUSTOMER_CODE) = @CUSTOMER_CODE
+               AND TRIM(RECIPIENT_TYPE) = @RECIPIENT_TYPE
+               AND TRIM(SENDER_EMAIL) = @SENDER_EMAIL
+               AND TRIM(ACTIVE_STATUS) = 'Y'
+             ORDER BY EMAIL_SEQ";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@CUSTOMER_CODE", (customerCode ?? "").Trim());
+        param.Add("@RECIPIENT_TYPE", (recipientType ?? "").Trim());
+        param.Add("@SENDER_EMAIL", (senderEmail ?? "").Trim());
 
         DataTable dt = db.ExecuteQuery(sql, param);
         if (db.isError || dt.Rows.Count == 0)
@@ -718,6 +818,7 @@ public class EmailSender
 
     private class SenderConfig
     {
+        public string SenderName { get; set; }
         public string SenderEmail { get; set; }
         public string AppPassword { get; set; }
     }

@@ -1,8 +1,8 @@
-# SHDOCPERM - SCE066 Permission
+# SHDOCPERM -   Permission
 
 ## Purpose
 
-Table `ITPROD.SHDOCPERM` stores page-level permissions for SCE066 by employee person code. The table name follows the existing Shipping Document table prefix used by `ITPROD.SHDOCH` and `ITPROD.SHDOCL`. The application reads and writes this table only through `App_Code/PermissionManager.cs`.
+Table `ITPROD.SHDOCPERM` stores page-level permissions for   by employee person code. The table name follows the existing Shipping Document table prefix used by `ITPROD.SHDOCH` and `ITPROD.SHDOCL`. The application reads and writes this table only through `App_Code/PermissionManager.cs`.
 
 Default access is deny: if a person code does not have an active row for a page code, that page is not accessible.
 
@@ -76,7 +76,7 @@ ALTER TABLE ITPROD.SHDOCPERM ADD COLUMN PERMISSION_GROUP VARCHAR(20) NOT NULL DE
   - Manual group: no automatic active permissions.
 - The group dropdown loads `SSS`, `ADMIN`, and distinct existing `PERMISSION_GROUP` values from `ITPROD.SHDOCPERM`; `Manual` remains available for a new group key.
 
-`SCE066.aspx`, `SCE066_1.aspx`, and `SCE066_RPT.aspx` are currently outside permission control and remain available to logged-in users.
+` .aspx`, ` _1.aspx`, and ` _RPT.aspx` are currently outside permission control and remain available to logged-in users.
 
 Insert employee permissions for one employee:
 
