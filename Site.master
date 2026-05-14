@@ -191,6 +191,7 @@
                                 <li id="liInvoiceAutoReminder" runat="server"><a href="<%= ResolveUrl("~/InvoiceAutoReminder.aspx") %>">Invoice Reminder</a></li>
                             </ul>
                         </li>
+                        <li><a href="http://172.16.33.37/SCE066/User_Manual_SEC066_Auto_Send_Mail.pdf" target="_blank" rel="noopener">Manual</a></li>
                     </ul>
                 </nav>
 
