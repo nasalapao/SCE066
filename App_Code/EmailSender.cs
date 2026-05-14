@@ -383,6 +383,21 @@ public class EmailSender
     public bool SendUploadNotice(string invoiceNo, string customerCode, string customerName, string manageUrl, string sentUser, out string errorMessage)
     {
         errorMessage = "";
+        bool hasActiveCustomerEmailRows;
+        if (!TryHasActiveCustomerEmailRows(customerCode, out hasActiveCustomerEmailRows, out errorMessage))
+        {
+            WriteSceLog("NOTICE", invoiceNo, customerCode, "", "", "FAILED", errorMessage, sentUser);
+            return false;
+        }
+
+        if (!hasActiveCustomerEmailRows)
+        {
+            string skipMessage = "ไม่พบ active row ใน SHCUMAILD สำหรับ Customer " + customerCode;
+            WriteSceLog("NOTICE", invoiceNo, customerCode, "", "", "SKIPPED", skipMessage, sentUser);
+            errorMessage = "";
+            return true;
+        }
+
         string recipients = host.IsDev ? "siripong.j@patayafood.com" : GetRecipientCsv("ALL", "CC");
 
         if (string.IsNullOrWhiteSpace(recipients))
@@ -586,6 +601,33 @@ public class EmailSender
 
         activeSender.SenderName = Convert.ToString(dt.Rows[0]["SENDER_NAME"]).Trim();
         return activeSender;
+    }
+
+    private bool TryHasActiveCustomerEmailRows(string customerCode, out bool exists, out string errorMessage)
+    {
+        exists = false;
+        errorMessage = "";
+
+        dbConnect db = new dbConnect();
+        string sql = @"
+            SELECT 1
+              FROM ITPROD.SHCUMAILD
+             WHERE TRIM(CUSTOMER_CODE) = @CUSTOMER_CODE
+               AND TRIM(ACTIVE_STATUS) = 'Y'
+             FETCH FIRST 1 ROW ONLY";
+
+        Dictionary<string, object> param = new Dictionary<string, object>();
+        param.Add("@CUSTOMER_CODE", (customerCode ?? "").Trim());
+
+        DataTable dt = db.ExecuteQuery(sql, param);
+        if (db.isError)
+        {
+            errorMessage = db.ErrorMessage;
+            return false;
+        }
+
+        exists = dt.Rows.Count > 0;
+        return true;
     }
 
     private string GetRecipientCsv(string customerCode, string recipientType)
