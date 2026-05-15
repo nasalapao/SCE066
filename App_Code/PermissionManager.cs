@@ -15,6 +15,7 @@ public static class PermissionManager
         public const string AdminEmail = "ADMIN_EMAIL";
         public const string AdminEmailTemplate = "ADMIN_EMAIL_TEMPLATE";
         public const string AdminEmailSender = "ADMIN_EMAIL_SENDER";
+        public const string AdminEmailLog = "ADMIN_EMAIL_LOG";
         public const string PermissionAdmin = "PERMISSION_ADMIN";
     }
 
@@ -55,6 +56,7 @@ public static class PermissionManager
         pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmail, PageName = "Email Management", GroupName = "Admin" });
         pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmailTemplate, PageName = "Email Template", GroupName = "Admin" });
         pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmailSender, PageName = "Email Sender", GroupName = "Admin" });
+        pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmailLog, PageName = "Email Log", GroupName = "Admin" });
         pages.Add(new PermissionPage { PageCode = PageCodes.PermissionAdmin, PageName = "Permission Management", GroupName = "Admin" });
         return pages;
     }
@@ -298,17 +300,11 @@ public static class PermissionManager
             return false;
         }
 
-        if (EmployeePermissionExists(personCode))
-        {
-            errorMessage = "Permission data already exists for this person code.";
-            return false;
-        }
-
         List<PermissionPage> pages = GetAllPages();
         foreach (PermissionPage page in pages)
         {
             bool isActive = GetDefaultActiveByGroup(permissionGroup, page.PageCode);
-            if (!InsertPermission(personCode, page.PageCode, isActive, permissionGroup, updatedUser, out errorMessage))
+            if (!SavePermission(personCode, page.PageCode, isActive, permissionGroup, updatedUser, out errorMessage))
             {
                 return false;
             }

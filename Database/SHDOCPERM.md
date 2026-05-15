@@ -43,6 +43,7 @@ CREATE TABLE ITPROD.SHDOCPERM (
 | `ADMIN_EMAIL` | Customer email recipient management. |
 | `ADMIN_EMAIL_TEMPLATE` | Customer email template management. |
 | `ADMIN_EMAIL_SENDER` | Customer email sender management. |
+| `ADMIN_EMAIL_LOG` | Customer email log search and preview. |
 | `PERMISSION_ADMIN` | Permission management page. |
 
 ## Seed Data
