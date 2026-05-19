@@ -28,7 +28,7 @@
 
         .permission-workspace {
             display: grid;
-            grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+            grid-template-columns: minmax(440px, 500px) minmax(0, 1fr);
             gap: 18px;
             align-items: start;
         }
@@ -102,6 +102,17 @@
             color: #a61b1b;
         }
 
+        .btn-hidden-submit {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            border: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+        }
+
         .message-error,
         .message-success {
             display: block;
@@ -124,6 +135,10 @@
         }
 
         .employee-summary {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
             margin-top: 14px;
             border: 1px solid #dbe7f1;
             border-radius: 8px;
@@ -132,7 +147,7 @@
         }
 
         .employee-name {
-            display: block;
+            display: inline-block;
             color: #1f2933;
             font-size: 1rem;
             font-weight: 700;
@@ -140,15 +155,15 @@
         }
 
         .employee-code {
-            display: block;
-            margin-top: 4px;
+            display: inline-block;
+            margin-top: 0;
             color: #475569;
             font-size: 0.88rem;
         }
 
         .employee-group {
             display: inline-flex;
-            margin-top: 10px;
+            margin-top: 0;
             border: 1px solid #c8d4df;
             border-radius: 999px;
             background: #fff;
@@ -170,6 +185,10 @@
             font-size: 0.88rem;
         }
 
+        .employee-grid {
+            table-layout: fixed;
+        }
+
         .employee-grid th,
         .permission-table th {
             background: #eef3f8;
@@ -183,14 +202,53 @@
         .permission-table th,
         .permission-table td {
             border: 1px solid #dde7f0;
-            padding: 8px 10px;
+            padding: 10px 12px;
             vertical-align: middle;
+        }
+
+        .employee-grid tbody tr:nth-child(even) td {
+            background: #fbfdff;
+        }
+
+        .employee-grid td {
+            line-height: 1.55;
+        }
+
+        .employee-grid th:nth-child(1),
+        .employee-grid td:nth-child(1) {
+            width: 52%;
+        }
+
+        .employee-grid th:nth-child(2),
+        .employee-grid td:nth-child(2) {
+            width: 16%;
+            text-align: center;
+            white-space: nowrap;
         }
 
         .employee-grid td:nth-child(3),
         .employee-grid th:nth-child(3) {
-            width: 130px;
+            width: 32%;
             text-align: center;
+        }
+
+        .employee-grid td:nth-child(3) {
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+
+        .employee-actions {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .employee-actions .btn-soft {
+            box-sizing: border-box;
+            width: 58px;
+            min-height: 34px;
+            padding: 6px 0;
+            line-height: 1.2;
         }
 
         .permission-table td:nth-child(1),
@@ -211,6 +269,22 @@
         @media (max-width: 900px) {
             .permission-workspace {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .permission-shell {
+                padding: 0 8px;
+            }
+
+            .permission-panel,
+            .employee-panel,
+            .editor-panel {
+                padding: 12px;
+            }
+
+            .employee-grid {
+                min-width: 430px;
             }
         }
     </style>
@@ -244,20 +318,22 @@
                             <Columns>
                                 <asp:BoundField DataField="DisplayName" HeaderText="Employee" />
                                 <asp:BoundField DataField="PermissionGroup" HeaderText="Group" />
-                                <asp:TemplateField HeaderText="">
+                                <asp:TemplateField HeaderText="Action">
                                     <ItemTemplate>
-                                        <asp:Button ID="btnSelectEmployee" runat="server"
-                                            Text="Select"
-                                            CssClass="btn-soft"
-                                            CommandName="SelectEmployee"
-                                            CommandArgument='<%# Container.DataItemIndex %>'
-                                            CausesValidation="false" />
-                                        <asp:Button ID="btnEditEmployee" runat="server"
-                                            Text="Edit"
-                                            CssClass="btn-soft"
-                                            CommandName="EditEmployee"
-                                            CommandArgument='<%# Container.DataItemIndex %>'
-                                            CausesValidation="false" />
+                                        <div class="employee-actions">
+                                            <asp:Button ID="btnSelectEmployee" runat="server"
+                                                Text="Select"
+                                                CssClass="btn-soft"
+                                                CommandName="SelectEmployee"
+                                                CommandArgument='<%# Container.DataItemIndex %>'
+                                                CausesValidation="false" />
+                                            <asp:Button ID="btnEditEmployee" runat="server"
+                                                Text="Edit"
+                                                CssClass="btn-soft"
+                                                CommandName="EditEmployee"
+                                                CommandArgument='<%# Container.DataItemIndex %>'
+                                                CausesValidation="false" />
+                                        </div>
                                     </ItemTemplate>
                                 </asp:TemplateField>
                             </Columns>
@@ -268,12 +344,13 @@
                     </div>
                 </aside>
 
-                <section class="editor-panel">
+                <asp:Panel ID="pnlEmployeeForm" runat="server" CssClass="editor-panel" DefaultButton="btnLoadEmployee">
                     <h2 class="section-title">Employee Form</h2>
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <label class="field-label" for="<%= txtPersonCode.ClientID %>">Person Code</label>
                             <asp:TextBox ID="txtPersonCode" runat="server" CssClass="field-control" MaxLength="20" />
+                            <asp:Button ID="btnLoadEmployee" runat="server" Text="Load" CssClass="btn-hidden-submit" OnClick="btnLoadEmployee_Click" CausesValidation="false" />
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="field-label" for="<%= ddlPermissionGroup.ClientID %>">Group</label>
@@ -327,7 +404,7 @@
                             <asp:Button ID="btnSavePermission" runat="server" Text="Save Permission" CssClass="btn-main" OnClick="btnSavePermission_Click" />
                         </div>
                     </asp:Panel>
-                </section>
+                </asp:Panel>
             </div>
         </section>
     </div>

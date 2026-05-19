@@ -192,7 +192,7 @@ public static class PermissionManager
                    MAX(UPDATED_DATE) AS LAST_UPDATED_DATE
               FROM ITPROD.SHDOCPERM
              GROUP BY PERSON_CODE
-             ORDER BY PERSON_CODE";
+             ORDER BY MAX(PERMISSION_GROUP), PERSON_CODE";
 
         DataTable dt = db.ExecuteQuery(sql, new Dictionary<string, object>());
         if (db.isError)

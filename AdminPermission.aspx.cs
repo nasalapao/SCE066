@@ -34,6 +34,12 @@ public partial class AdminPermission : Page
         InsertEmployee();
     }
 
+    protected void btnLoadEmployee_Click(object sender, EventArgs e)
+    {
+        ClearMessage();
+        LoadPersonCode();
+    }
+
     protected void btnUpdateEmployee_Click(object sender, EventArgs e)
     {
         ClearMessage();
@@ -170,6 +176,42 @@ public partial class AdminPermission : Page
         ShowSuccess("Page permission saved.");
     }
 
+    private void LoadPersonCode()
+    {
+        string personCode = txtPersonCode.Text.Trim();
+        if (string.IsNullOrEmpty(personCode))
+        {
+            ShowError("Person Code is required.");
+            txtPersonCode.Focus();
+            return;
+        }
+
+        string permissionGroup = PermissionManager.GetPermissionGroup(personCode);
+        if (!string.IsNullOrEmpty(permissionGroup))
+        {
+            LoadEmployee(personCode, permissionGroup, true);
+            return;
+        }
+
+        permissionGroup = ResolvePermissionGroup();
+        hdMode.Value = "NEW";
+        hdSelectedPersonCode.Value = personCode;
+        hdPermissionGroup.Value = permissionGroup;
+
+        txtPersonCode.Text = personCode;
+        txtPersonCode.Enabled = true;
+        ddlPermissionGroup.Enabled = true;
+        txtManualPermissionGroup.Enabled = true;
+
+        btnInsertEmployee.Visible = true;
+        btnUpdateEmployee.Visible = false;
+        btnDeleteEmployee.Visible = false;
+
+        BindEmployeeInfo(personCode, permissionGroup);
+        BindPermissionTable(personCode);
+        pnlPermissions.Visible = true;
+    }
+
     private List<PermissionManager.PagePermissionValue> ReadPagePermissions()
     {
         List<PermissionManager.PagePermissionValue> pagePermissions = new List<PermissionManager.PagePermissionValue>();
@@ -276,7 +318,26 @@ public partial class AdminPermission : Page
 
     private void BindPermissionTable(string personCode)
     {
-        gvPermissions.DataSource = PermissionManager.GetEmployeePermissions(personCode);
+        List<PermissionManager.EmployeePermission> permissions = PermissionManager.GetEmployeePermissions(personCode);
+        List<PermissionManager.EmployeePermission> orderedPermissions = new List<PermissionManager.EmployeePermission>();
+
+        foreach (PermissionManager.EmployeePermission permission in permissions)
+        {
+            if (permission.IsActive)
+            {
+                orderedPermissions.Add(permission);
+            }
+        }
+
+        foreach (PermissionManager.EmployeePermission permission in permissions)
+        {
+            if (!permission.IsActive)
+            {
+                orderedPermissions.Add(permission);
+            }
+        }
+
+        gvPermissions.DataSource = orderedPermissions;
         gvPermissions.DataBind();
     }
 

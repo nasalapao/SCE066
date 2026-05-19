@@ -71,6 +71,12 @@ public partial class CustomerEmailSend : Page
             return;
         }
 
+        if (!CanSendCustomerMail())
+        {
+            ShowError("You do not have permission to send customer email.");
+            return;
+        }
+
         int rowIndex;
         if (!int.TryParse(Convert.ToString(e.CommandArgument), out rowIndex) || rowIndex < 0 || rowIndex >= gvInvoice.DataKeys.Count)
         {
@@ -109,6 +115,12 @@ public partial class CustomerEmailSend : Page
         Button btnSendMail = e.Row.FindControl("btnSendMail") as Button;
         if (btnSendMail == null)
         {
+            return;
+        }
+
+        if (!CanSendCustomerMail())
+        {
+            btnSendMail.Visible = false;
             return;
         }
 
@@ -322,8 +334,14 @@ public partial class CustomerEmailSend : Page
         }
 
         AddLastUserDisplay(dt);
+        gvInvoice.Columns[8].Visible = CanSendCustomerMail();
         gvInvoice.DataSource = dt;
         gvInvoice.DataBind();
+    }
+
+    private bool CanSendCustomerMail()
+    {
+        return PermissionManager.GetPermissionGroup(GetCurrentPersonCode()) == "SSS";
     }
 
     private void AddLastUserDisplay(DataTable dt)
