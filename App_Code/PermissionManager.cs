@@ -16,6 +16,7 @@ public static class PermissionManager
         public const string AdminEmailTemplate = "ADMIN_EMAIL_TEMPLATE";
         public const string AdminEmailSender = "ADMIN_EMAIL_SENDER";
         public const string AdminEmailLog = "ADMIN_EMAIL_LOG";
+        public const string ProgramUpdateAdmin = "PROGRAM_UPDATE_ADMIN";
         public const string PermissionAdmin = "PERMISSION_ADMIN";
     }
 
@@ -57,6 +58,7 @@ public static class PermissionManager
         pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmailTemplate, PageName = "Email Template", GroupName = "Admin" });
         pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmailSender, PageName = "Email Sender", GroupName = "Admin" });
         pages.Add(new PermissionPage { PageCode = PageCodes.AdminEmailLog, PageName = "Email Log", GroupName = "Admin" });
+        pages.Add(new PermissionPage { PageCode = PageCodes.ProgramUpdateAdmin, PageName = "Program Update", GroupName = "Admin" });
         pages.Add(new PermissionPage { PageCode = PageCodes.PermissionAdmin, PageName = "Permission Management", GroupName = "Admin" });
         return pages;
     }

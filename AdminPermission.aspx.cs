@@ -319,25 +319,18 @@ public partial class AdminPermission : Page
     private void BindPermissionTable(string personCode)
     {
         List<PermissionManager.EmployeePermission> permissions = PermissionManager.GetEmployeePermissions(personCode);
-        List<PermissionManager.EmployeePermission> orderedPermissions = new List<PermissionManager.EmployeePermission>();
-
-        foreach (PermissionManager.EmployeePermission permission in permissions)
+        permissions.Sort(delegate(PermissionManager.EmployeePermission left, PermissionManager.EmployeePermission right)
         {
-            if (permission.IsActive)
+            int activeCompare = right.IsActive.CompareTo(left.IsActive);
+            if (activeCompare != 0)
             {
-                orderedPermissions.Add(permission);
+                return activeCompare;
             }
-        }
 
-        foreach (PermissionManager.EmployeePermission permission in permissions)
-        {
-            if (!permission.IsActive)
-            {
-                orderedPermissions.Add(permission);
-            }
-        }
+            return string.Compare(left.PageName, right.PageName, StringComparison.CurrentCultureIgnoreCase);
+        });
 
-        gvPermissions.DataSource = orderedPermissions;
+        gvPermissions.DataSource = permissions;
         gvPermissions.DataBind();
     }
 

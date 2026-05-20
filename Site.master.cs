@@ -74,9 +74,10 @@ public partial class Site : MasterPage
         liAdminEmailTemplate.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailTemplate);
         liAdminEmailSender.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailSender);
         liAdminEmailLog.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.AdminEmailLog);
+        liProgramUpdateAdmin.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.ProgramUpdateAdmin);
         liPermissionAdmin.Visible = allowedPageCodes.Contains(PermissionManager.PageCodes.PermissionAdmin);
         liInvoiceAutoReminder.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liPermissionAdmin.Visible;
-        liAdmin.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liAdminEmailLog.Visible || liPermissionAdmin.Visible || liInvoiceAutoReminder.Visible;
+        liAdmin.Visible = liAdminEmail.Visible || liAdminEmailTemplate.Visible || liAdminEmailSender.Visible || liAdminEmailLog.Visible || liProgramUpdateAdmin.Visible || liPermissionAdmin.Visible || liInvoiceAutoReminder.Visible;
     }
 
     private void BindPublicPage()
@@ -90,6 +91,7 @@ public partial class Site : MasterPage
         liAdminEmailTemplate.Visible = false;
         liAdminEmailSender.Visible = false;
         liAdminEmailLog.Visible = false;
+        liProgramUpdateAdmin.Visible = false;
         liPermissionAdmin.Visible = false;
         liAdmin.Visible = false;
     }
