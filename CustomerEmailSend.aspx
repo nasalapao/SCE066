@@ -55,6 +55,14 @@
             gap: 8px;
         }
 
+        .search-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
         .checkbox-row {
             display: flex;
             align-items: center;
@@ -64,7 +72,8 @@
         }
 
         .btn-main,
-        .btn-soft {
+        .btn-soft,
+        .btn-excel {
             min-height: 40px;
             border-radius: 8px;
             padding: 8px 14px;
@@ -81,6 +90,36 @@
             border: 1px solid #c8d4df;
             background: #fff;
             color: #1f4e79;
+        }
+
+        .btn-excel {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #1f8f4d;
+            background: #1f8f4d;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .btn-excel:hover,
+        .btn-excel:focus {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .excel-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: #fff;
+            color: #1f8f4d;
+            font-size: 0.78rem;
+            font-weight: 800;
+            line-height: 1;
         }
 
         .file-link {
@@ -142,7 +181,7 @@
             vertical-align: middle;
         }
 
-        .mail-grid td:nth-child(2) {
+        .mail-grid td:nth-child(3) {
             min-width: 260px;
         }
 
@@ -155,7 +194,27 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript">
         $(function () {
-            $('#<%= txtDateFrom.ClientID %>').datepicker({ dateFormat: 'dd/mm/yy' });
+            function setDateToEndOfMonth(dateText) {
+                var selectedDate;
+                try {
+                    selectedDate = $.datepicker.parseDate('dd/mm/yy', dateText);
+                } catch (e) {
+                    return;
+                }
+
+                var endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+                $('#<%= txtDateTo.ClientID %>').val($.datepicker.formatDate('dd/mm/yy', endOfMonth));
+            }
+
+            $('#<%= txtDateFrom.ClientID %>').datepicker({
+                dateFormat: 'dd/mm/yy',
+                onSelect: function (dateText) {
+                    setDateToEndOfMonth(dateText);
+                }
+            }).on('change', function () {
+                setDateToEndOfMonth(this.value);
+            });
+
             $('#<%= txtDateTo.ClientID %>').datepicker({ dateFormat: 'dd/mm/yy' });
         });
     </script>
@@ -177,6 +236,10 @@
                 <div class="col-12 col-md-2">
                     <label class="field-label" for="<%= txtCustomerCode.ClientID %>">Customer Code</label>
                     <asp:TextBox ID="txtCustomerCode" runat="server" CssClass="field-control" MaxLength="10" />
+                </div>
+                <div class="col-12 col-md-2">
+                    <label class="field-label" for="<%= txtCustomerName.ClientID %>">Customer Name</label>
+                    <asp:TextBox ID="txtCustomerName" runat="server" CssClass="field-control" MaxLength="80" />
                 </div>
                 <div class="col-12 col-md-2">
                     <label class="field-label" for="<%= txtDateFrom.ClientID %>">Date From</label>
@@ -201,11 +264,16 @@
                         <label for="<%= chkHasCustomerEmail.ClientID %>">Has customer email</label>
                     </div>
                 </div>
-                <div class="col-12 col-md-2">
-                    <label class="field-label">&nbsp;</label>
-                    <div class="action-row">
+                <div class="col-12">
+                    <div class="search-action-bar">
+                        <div class="action-row">
                         <asp:Button ID="btnSearch" runat="server" Text="Search" CssClass="btn-main" OnClick="btnSearch_Click" />
                         <asp:Button ID="btnReset" runat="server" Text="Reset" CssClass="btn-soft" OnClick="btnReset_Click" CausesValidation="false" />
+                        </div>
+                        <asp:LinkButton ID="btnExportExcel" runat="server" CssClass="btn-excel" OnClick="btnExportExcel_Click" CausesValidation="false">
+                            <span class="excel-icon">X</span>
+                            <span>Export Excel</span>
+                        </asp:LinkButton>
                     </div>
                 </div>
             </div>
@@ -221,7 +289,8 @@
                         OnRowDataBound="gvInvoice_RowDataBound">
                         <Columns>
                             <asp:BoundField DataField="SHIVNO" HeaderText="Invoice" />
-                            <asp:BoundField DataField="CUSTOMER_DISPLAY" HeaderText="Customer" />
+                            <asp:BoundField DataField="SHCUNO" HeaderText="Customer Code" />
+                            <asp:BoundField DataField="CUSTOMER_NAME" HeaderText="Customer Name" />
                             <asp:BoundField DataField="INVOICE_UPLOAD_DATE" HeaderText="INV Upload Date" />
                             <asp:TemplateField HeaderText="File">
                                 <ItemTemplate>

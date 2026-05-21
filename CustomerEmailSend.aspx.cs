@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Security.Claims;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using ClosedXML.Excel;
 
 public partial class CustomerEmailSend : Page
 {
@@ -30,7 +32,7 @@ public partial class CustomerEmailSend : Page
 
             txtInvoiceNo.Text = (Request.QueryString["INVNO"] ?? "").Trim();
             SetDefaultDateRange();
-            ddlStatus.SelectedValue = "PENDING";
+            SetDefaultStatus();
             BindInvoiceList();
         }
     }
@@ -46,10 +48,29 @@ public partial class CustomerEmailSend : Page
         ClearMessage();
         txtInvoiceNo.Text = "";
         txtCustomerCode.Text = "";
+        txtCustomerName.Text = "";
         SetDefaultDateRange();
-        ddlStatus.SelectedValue = "PENDING";
+        SetDefaultStatus();
         chkHasCustomerEmail.Checked = true;
         BindInvoiceList();
+    }
+
+    protected void btnExportExcel_Click(object sender, EventArgs e)
+    {
+        ClearMessage();
+
+        DataTable dt = GetInvoiceListData();
+        if (dt == null)
+        {
+            return;
+        }
+
+        ExportInvoiceListToExcel(dt);
+    }
+
+    private void SetDefaultStatus()
+    {
+        ddlStatus.SelectedValue = CanSendCustomerMail() ? "PENDING" : "ALL";
     }
 
     private void SetDefaultDateRange()
@@ -236,6 +257,19 @@ public partial class CustomerEmailSend : Page
 
     private void BindInvoiceList()
     {
+        DataTable dt = GetInvoiceListData();
+        if (dt == null)
+        {
+            return;
+        }
+
+        gvInvoice.Columns[9].Visible = CanSendCustomerMail();
+        gvInvoice.DataSource = dt;
+        gvInvoice.DataBind();
+    }
+
+    private DataTable GetInvoiceListData()
+    {
         dbConnect db = new dbConnect();
         Dictionary<string, object> param = new Dictionary<string, object>();
 
@@ -243,7 +277,6 @@ public partial class CustomerEmailSend : Page
             SELECT shivno,
                    trim(shcuno) AS shcuno,
                    coalesce(okcunm, '') AS customer_name,
-                   trim(shcuno) || '-' || coalesce(okcunm, '') AS customer_display,
                    rtrim(char(invdoc.invdate)) AS invoice_upload_date,
                    coalesce(shmlst, '') AS shmlst,
                    shmlts,
@@ -280,6 +313,13 @@ public partial class CustomerEmailSend : Page
             param.Add("@SHCUNO", customerCode);
         }
 
+        string customerName = txtCustomerName.Text.Trim().ToUpper();
+        if (!string.IsNullOrEmpty(customerName))
+        {
+            sql += " AND upper(coalesce(okcunm, '')) LIKE @CUSTOMER_NAME";
+            param.Add("@CUSTOMER_NAME", "%" + customerName + "%");
+        }
+
         if (chkHasCustomerEmail.Checked)
         {
             sql += @"
@@ -296,7 +336,7 @@ public partial class CustomerEmailSend : Page
         int dateFrom;
         if (!TryParseOptionalDateValue(txtDateFrom.Text, out dateFrom))
         {
-            return;
+            return null;
         }
         if (dateFrom > 0)
         {
@@ -307,7 +347,7 @@ public partial class CustomerEmailSend : Page
         int dateTo;
         if (!TryParseOptionalDateValue(txtDateTo.Text, out dateTo))
         {
-            return;
+            return null;
         }
         if (dateTo > 0)
         {
@@ -330,13 +370,75 @@ public partial class CustomerEmailSend : Page
         if (db.isError)
         {
             ShowError(db.ErrorMessage);
-            return;
+            return null;
         }
 
         AddLastUserDisplay(dt);
-        gvInvoice.Columns[8].Visible = CanSendCustomerMail();
-        gvInvoice.DataSource = dt;
-        gvInvoice.DataBind();
+        return dt;
+    }
+
+    private void ExportInvoiceListToExcel(DataTable dt)
+    {
+        using (XLWorkbook workbook = new XLWorkbook())
+        {
+            IXLWorksheet worksheet = workbook.Worksheets.Add("Customer Email Send");
+            string[] headers = new string[]
+            {
+                "Invoice",
+                "Customer Code",
+                "Customer Name",
+                "INV Upload Date",
+                "Mail Status",
+                "Last Sent",
+                "Last User",
+                "Sent Count"
+            };
+            string[] fields = new string[]
+            {
+                "SHIVNO",
+                "SHCUNO",
+                "CUSTOMER_NAME",
+                "INVOICE_UPLOAD_DATE",
+                "MAIL_STATUS_TEXT",
+                "SHMLTS",
+                "SHMLUS_DISPLAY",
+                "SHMLCT"
+            };
+
+            for (int columnIndex = 0; columnIndex < headers.Length; columnIndex++)
+            {
+                worksheet.Cell(1, columnIndex + 1).Value = headers[columnIndex];
+            }
+
+            IXLRange headerRange = worksheet.Range(1, 1, 1, headers.Length);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F8F4D");
+            headerRange.Style.Font.FontColor = XLColor.White;
+            headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            for (int rowIndex = 0; rowIndex < dt.Rows.Count; rowIndex++)
+            {
+                for (int columnIndex = 0; columnIndex < fields.Length; columnIndex++)
+                {
+                    worksheet.Cell(rowIndex + 2, columnIndex + 1).Value = Convert.ToString(dt.Rows[rowIndex][fields[columnIndex]]);
+                }
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                string fileName = "CustomerEmailSend_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
+
+                Response.Clear();
+                Response.Buffer = true;
+                Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                Response.AddHeader("content-disposition", "attachment; filename=" + fileName);
+                Response.BinaryWrite(stream.ToArray());
+                Response.End();
+            }
+        }
     }
 
     private bool CanSendCustomerMail()
